@@ -1,8 +1,13 @@
+/* style.css */
 body {
     font-family: 'Arial Narrow', Arial, sans-serif;
     margin: 0;
     padding: 0;
-    overflow-x: hidden
+    overflow-x: hidden;
+    /* --- Ajuste para el Footer --- */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ocupa el 100% de la altura de la ventana */
 }
 
 header {
@@ -13,19 +18,12 @@ header {
     align-items: center;
     padding: 12px 40px;
     height: 60px;
+    flex-shrink: 0; /* Evita que el header se deforme */
 }
 
-.header-left {
-    display: flex;
-    align-items: left;
-    gap: 10px;
-    font-weight: bold;
-    font-size: 14px;
-    letter-spacing: 1px;
-}
-.header-right i {
-    font-size: 22px;
-    cursor: pointer;
+/* El elemento main ahora se estirará para llenar el espacio vacío */
+main {
+    flex: 1;
 }
 
 nav {
@@ -43,78 +41,28 @@ nav a {
     transition: color 0.3s;
 }
 
-.hero {
-    background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), 
-                      url('https://ecogreenbiode.com/wp-content/uploads/2023/04/kit-familiar2-scaled.jpg');
-    background-size: cover;
-    background-position: center;
-    height: 450px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: white;
-}
-
-.hero-content h1 {
-    font-size: 110px;
-    margin: 0;
-    font-family: 'Times New Roman', serif; 
-    font-weight: bold;
-}
-
-.hero-content p {
-    font-size: 16px;
-    max-width: 850px;
-    margin: 10px auto 0;
-    font-weight: bold;
-    letter-spacing: 1px;
-    line-height: 1.4;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
-}
-
-.distribuidores-container {
-    width: 100%;
-    background-color: white;
-    padding: 25px 0;
-    overflow: hidden; 
-    display: flex;
-    border-bottom: 1px solid #eee;
-}
-
-.carrusel-track {
-    display: flex;
-    width: fit-content;
-    animation: scroll 25s linear infinite; 
-}
-
-.distribuidores-group {
-    display: flex;
-    align-items: center;
-    gap: 60px; 
-    padding: 0 30px;
-}
-
-.distribuidores-group img {
-    height: 55px;
-    width: auto;
-    flex-shrink: 0;
-}
-
-@keyframes scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
-
-.distribuidores-container:hover .carrusel-track {
-    animation-play-state: paused;
-}
-
 footer {
+    width: 100%;
     background-color: #4f7d67;
     color: white;
     text-align: center;
     padding: 15px 0;
     font-weight: bold;
     font-size: 14px;
+    flex-shrink: 0; /* Asegura que el footer no se encoja */
+}
+
+/* Animación fluida para el carrusel */
+@keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.animate-scroll {
+    animation: scroll 30s linear infinite;
+    display: flex; 
+}
+
+.pause-on-hover:hover {
+    animation-play-state: paused;
 }
