@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador - Productos EcoGreen</title>
+    <link rel="stylesheet" href="productos.css">
+</head>
+<body>
+    <div class="contenedor-principal">
+
+        <aside class="barra-lateral">
+            <input type="text" id="Buscador" name="Buscador" placeholder="Buscador"/>
+            <header>
+                <div class="foto">
+                    <img src="imagenes/Admin.jpg" alt="admin" class="admin" width="80">
+                </div>
+                <h2>Panel Administrador</h2>
+            </header>
+            
+            <nav>
+                <a href="usuarios.html">Usuarios</a>
+                <a href="productos.html" class="activo">Productos</a>
+                <a href="reportes.html">Reportes</a>
+                <a href="#">Configuración</a>
+                <a href="index.html">Inicio</a>
+            </nav>
+        </aside>
+
+        <main class="contenido-derecha">
+            <div class="encabezado-seccion">
+                <h1>Gestión de Productos</h1>
+                <button class="btn-nuevo">+ Nuevo Producto</button>
+            </div>
+            
+            <p>Administra el inventario de productos biodegradables y su impacto ambiental.</p>
+            
+            <div class="contenedor-tabla">
+                <table class="tabla-productos">
+                    <thead>
+                        <tr>
+                            <th>Imagen</th>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Material</th>
+                            <th>Stock</th>
+                            <th>Precio</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><div class="img-mini">📷</div></td>
+                            <td>Pitillos de Bambú</td>
+                            <td>Cubiertos</td>
+                            <td>Madera de Bambú</td>
+                            <td><span class="stock-ok">120</span></td>
+                            <td>$15.000</td>
+                            <td class="celda-acciones">
+                                <div class="menu-opciones">
+                                    <button class="tres-puntos">⋮</button>
+                                    <div class="desplegable">
+                                        <a href="#">Editar</a>
+                                        <a href="#" class="eliminar">Eliminar</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><div class="img-mini">📷</div></td>
+                            <td>Bolsas Compostables</td>
+                            <td>Empaques</td>
+                            <td>Fécula de Maíz</td>
+                            <td><span class="stock-bajo">8</span></td>
+                            <td>$12.500</td>
+                            <td class="celda-acciones">
+                                <div class="menu-opciones">
+                                    <button class="tres-puntos">⋮</button>
+                                    <div class="desplegable">
+                                        <a href="#">Editar</a>
+                                        <a href="#" class="eliminar">Eliminar</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+    </div>
+</body>
+</html>

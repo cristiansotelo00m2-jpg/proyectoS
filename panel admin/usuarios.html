@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador</title>
+    <link rel="stylesheet" href="usuarios.css">
+</head>
+<body>
+    <div class="contenedor-principal">
+
+        <aside class="barra-lateral">
+            <input type="text" id="Buscador" name="Buscador" placeholder="Buscador"/>
+            <header>
+                <div class="foto">
+                    <img src="imagenes/Admin.jpg" alt="admin" class="admin" width="80">
+                </div>
+                <h2>Panel Administrador</h2>
+            </header>
+            
+            <nav>
+                <a href="usuarios.html" class="activo">Usuarios</a>
+                <a href="productos.html">Productos</a>
+                <a href="reportes.html">Reportes</a>
+                <a href="configuracion.html">Configuración</a>
+                <a href="index.html">Inicio</a>
+            </nav>
+        </aside>
+
+        <main class="contenido-derecha">
+            <h1>Usuarios</h1>
+            <div class="tarjetas-ejemplo">
+                 <div class="tarjeta">
+                    <div class="menu-opciones">
+                        <button class="tres-puntos">⋮</button>
+                        <div class="desplegable">
+                            <a href="#">Editar</a>
+                            <a href="#" class="eliminar">Eliminar</a>
+                        </div>
+                    </div>
+                    Usuario: Sotelo <br> 
+                    Id: 1 <br> 
+                    Correo electronico: cristiansotelo.0.0m2@gmail.com <br> 
+                    Rol: Administrador <br> 
+                    Estado: Activo
+                </div>
+                <div class="tarjeta">
+                    <div class="menu-opciones">
+                        <button class="tres-puntos">⋮</button>
+                        <div class="desplegable">
+                            <a href="#">Editar</a>
+                            <a href="#" class="eliminar">Eliminar</a>
+                        </div>
+                    </div>
+                    Usuario: pepito <br> 
+                    Id: 2 <br> 
+                    Correo electronico: pepito@gmail.com <br> 
+                    Rol: Usuario <br> 
+                    Estado: Activo
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

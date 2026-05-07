@@ -1,0 +1,54 @@
+/* style.css */
+body {
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    /* --- Ajuste para el Footer --- */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ocupa el 100% de la altura de la ventana */
+}
+
+header {
+    background-color: #4f7d67; 
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 40px;
+    height: 60px;
+    flex-shrink: 0; /* Evita que el header se deforme */
+}
+
+/* El elemento main ahora se estirará para llenar el espacio vacío */
+main {
+    flex: 1;
+}
+
+nav {
+    display: flex;
+    gap: 20px;
+    flex-grow: 1;
+    justify-content: center;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 13px;
+    transition: color 0.3s;
+}
+
+footer {
+    width: 100%;
+    background-color: #4f7d67;
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    font-weight: bold;
+    font-size: 14px;
+    flex-shrink: 0; /* Asegura que el footer no se encoja */
+}
+
