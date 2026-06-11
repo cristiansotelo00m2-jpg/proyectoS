@@ -28,6 +28,32 @@
         </aside>
 
         <main class="contenido-derecha">
+            {% if usuarios %}
+        <section class="w-full max-w-2xl bg-white p-6 rounded-3xl shadow-xl border border-gray-100 mt-4">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Usuarios en la Base de Datos</h3>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Correo Electrónico</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td>{{ usuario[0] }}</td>
+                            <td>{{ usuario[1] }}</td>
+                            <td>{{ usuario[2] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+    </main>
             <h1>Usuarios</h1>
             <div class="tarjetas-ejemplo">
                  <div class="tarjeta">

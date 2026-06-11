@@ -17,12 +17,12 @@
             <span><strong>SOURCE VISION GAIN</strong></span>
         </div>
         <nav>
-            <a href="index.html">Inicio</a>
-            <a class="fw-bold text-decoration-underline" href="quienessomos.html">¿Quiénes somos?</a>
-            <a href="gestiondeusuarios.html">Gestión de usuarios</a>
-            <a href="gestiondeventas.html">Ventas</a>
-            <a href="gestiondeseguimiento.html">Seguimiento</a>
-        </nav>
+    <a href="{{ url_for('home') }}">Inicio</a>
+    <a href="{{ url_for('quienes_somos') }}">¿Quiénes somos?</a>
+    <a href="{{ url_for('formulario') }}">Gestión de usuarios</a>
+    <a href="{{ url_for('ventas') }}">Ventas</a>
+    <a href="{{ url_for('seguimiento') }}">Seguimiento</a>
+</nav>
     </header>
 
     <main class="min-h-[calc(100vh-90px)] flex items-center justify-center p-5">

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="EcoGreen" content="Venta de productos biodegradables">
     <title>Ecogreen</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="static/style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -14,12 +14,12 @@
             <span>SOURCE VISION GAIN</span>
         </div>
         <nav>
-            <a class="fw-bold text-decoration-underline" href="index.html"active>Inicio</a>
-            <a href="quienessomos.html">¿Quiénes somos?</a>
-            <a href="gestiondeusuarios.html">Gestión de usuarios</a>
-            <a href="gestiondeventas.html">Ventas</a>
-            <a href="gestiondeseguimiento.html">Seguimiento</a>
-        </nav>
+    <a href="{{ url_for('home') }}">Inicio</a>
+    <a href="{{ url_for('quienes_somos') }}">¿Quiénes somos?</a>
+    <a href="{{ url_for('formulario') }}">Gestión de usuarios</a>
+    <a href="{{ url_for('ventas') }}">Ventas</a>
+    <a href="{{ url_for('seguimiento') }}">Seguimiento</a>
+</nav>
     </header>
 
     <main>
@@ -79,11 +79,68 @@
                 <img src="imagenes/dc.png" alt="Logo de DC, cliente de Ecogreen" style="height: 3.5rem; width: auto;">
             </div>
         </section>
+        <br>
+
+        <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-6 p-4 max-w-[1100px] mx-auto">
+            <h1 class="text-center fw-bold">Productos</h1>
+            <div class="border border-gray-200 rounded-xl p-4 shadow-sm bg-white">
+                <img class="w-full h-48 object-cover rounded-lg mb-4" src="imagenes/plato mini.png" alt="Plato mini">
+                <h3 class="font-bold text-lg">Plato Mini</h3>
+                <div class="flex justify-between items-center mt-4">
+                    <p class="text-green-700 text-xl font-bold">$45.000</p>
+                    <button
+                        onclick="agregarAlCarrito('Plato Mini', 45000, 'imagenes/plato mini.png')"
+                        class="bg-[#4f7d67] text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-[#3d6352] transition">
+                        AGREGAR
+                    </button>
+                </div>
+            </div>
+
+            <!-- Agrega más productos con el mismo patrón -->
+        </div>
+    </main>
     </main>
 
     <footer>
         <p>Derechos de autor © 2024 EcoGreen. Todos los derechos reservados.</p>
     </footer>
+
+    <script>
+        function agregarAlCarrito(nombre, precio, imagen) {
+            let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            const existe = carrito.find(p => p.nombre === nombre);
+            if (existe) {
+                existe.cantidad += 1;
+            } else {
+                carrito.push({ nombre, precio, imagen, cantidad: 1 });
+            }
+            localStorage.setItem('carrito', JSON.stringify(carrito));
+            actualizarContador();
+
+            // Feedback visual
+            const btn = event.target;
+            btn.textContent = '✓ AGREGADO';
+            btn.classList.add('bg-green-500');
+            setTimeout(() => {
+                btn.textContent = 'AGREGAR';
+                btn.classList.remove('bg-green-500');
+            }, 1000);
+        }
+
+        function actualizarContador() {
+            const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            const total = carrito.reduce((sum, p) => sum + p.cantidad, 0);
+            const contador = document.getElementById('carrito-contador');
+            if (total > 0) {
+                contador.textContent = total;
+                contador.classList.remove('hidden');
+            } else {
+                contador.classList.add('hidden');
+            }
+        }
+
+        actualizarContador();
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
