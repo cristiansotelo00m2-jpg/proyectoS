@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenidos a EcoGreen</title>
+    <link rel="stylesheet" href="static/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+    <header>
+        <div class="d-flex align-items-center gap-2 fw-bold" style="font-size: 14px; letter-spacing: 0.08em;">
+            <span><strong>SOURCE VISION GAIN</strong></span>
+        </div>
+        <nav>
+    <a href="{{ url_for('home') }}">Inicio</a>
+    <a href="{{ url_for('quienes_somos') }}">¿Quiénes somos?</a>
+    <a href="{{ url_for('formulario') }}">Gestión de usuarios</a>
+    <a href="{{ url_for('ventas') }}">Ventas</a>
+    <a href="{{ url_for('seguimiento') }}">Seguimiento</a>
+</nav>
+    </header>
+
+    <main class="flex flex-col gap-6 my-[30px] mx-auto max-w-[800px] px-4">
+
+        <h2 class="text-center text-green-800 text-3xl font-bold">🛒 Tu Carrito</h2>
+
+        <div id="carrito-contenido"></div>
+
+        <div id="carrito-total" class="hidden text-right text-xl font-bold text-green-800 mt-4"></div>
+
+        <div class="flex justify-between mt-4">
+            <a href="gestiondeventas.html" class="bg-gray-200 text-gray-700 font-bold px-6 py-2 rounded-lg hover:bg-gray-300 transition">
+                ← Seguir comprando
+            </a>
+            <button id="btn-vaciar" onclick="vaciarCarrito()" class="hidden bg-red-100 text-red-600 font-bold px-6 py-2 rounded-lg hover:bg-red-200 transition">
+                Vaciar carrito
+            </button>
+            <button id="btn-comprar" onclick="finalizarCompra()" class="hidden bg-[#4f7d67] text-white font-bold px-6 py-2 rounded-lg hover:bg-[#3d6352] transition">
+                Finalizar compra
+            </button>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>Derechos de autor © 2024 EcoGreen. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        function renderizarCarrito() {
+            const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            const contenido = document.getElementById('carrito-contenido');
+            const totalDiv = document.getElementById('carrito-total');
+            const btnVaciar = document.getElementById('btn-vaciar');
+            const btnComprar = document.getElementById('btn-comprar');
+
+            if (carrito.length === 0) {
+                contenido.innerHTML = `
+                    <div class="text-center text-gray-500 py-16">
+                        <p class="text-5xl mb-4">🛒</p>
+                        <p class="text-lg">Tu carrito está vacío.</p>
+                        <a href="gestiondeventas.html" class="text-[#4f7d67] font-bold underline mt-2 inline-block">Ver productos</a>
+                    </div>`;
+                totalDiv.classList.add('hidden');
+                btnVaciar.classList.add('hidden');
+                btnComprar.classList.add('hidden');
+                return;
+            }
+
+            let html = '';
+            let total = 0;
+
+            carrito.forEach((producto, index) => {
+                const subtotal = producto.precio * producto.cantidad;
+                total += subtotal;
+                html += `
+                    <div class="flex items-center gap-4 border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
+                        <img src="${producto.imagen}" alt="${producto.nombre}" class="w-20 h-20 object-cover rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-lg">${producto.nombre}</h3>
+                            <p class="text-green-700 font-bold">$${producto.precio.toLocaleString()}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="cambiarCantidad(${index}, -1)" class="bg-gray-200 px-3 py-1 rounded-lg font-bold hover:bg-gray-300">−</button>
+                            <span class="font-bold text-lg w-6 text-center">${producto.cantidad}</span>
+                            <button onclick="cambiarCantidad(${index}, 1)" class="bg-gray-200 px-3 py-1 rounded-lg font-bold hover:bg-gray-300">+</button>
+                        </div>
+                        <p class="font-bold text-green-800 w-24 text-right">$${subtotal.toLocaleString()}</p>
+                        <button onclick="eliminarProducto(${index})" class="text-red-400 hover:text-red-600 text-xl ml-2">✕</button>
+                    </div>`;
+            });
+
+            contenido.innerHTML = html;
+            totalDiv.textContent = `Total: $${total.toLocaleString()}`;
+            totalDiv.classList.remove('hidden');
+            btnVaciar.classList.remove('hidden');
+            btnComprar.classList.remove('hidden');
+        }
+
+        function cambiarCantidad(index, delta) {
+            let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            carrito[index].cantidad += delta;
+            if (carrito[index].cantidad <= 0) carrito.splice(index, 1);
+            localStorage.setItem('carrito', JSON.stringify(carrito));
+            renderizarCarrito();
+        }
+
+        function eliminarProducto(index) {
+            let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            carrito.splice(index, 1);
+            localStorage.setItem('carrito', JSON.stringify(carrito));
+            renderizarCarrito();
+        }
+
+        function vaciarCarrito() {
+            localStorage.removeItem('carrito');
+            renderizarCarrito();
+        }
+
+        function finalizarCompra() {
+            alert('¡Compra finalizada! Gracias por tu pedido.');
+            localStorage.removeItem('carrito');
+            renderizarCarrito();
+        }
+
+        renderizarCarrito();
+    </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador</title>
+    <link rel="stylesheet" href="usuarios.css">
+</head>
+<body>
+    <div class="contenedor-principal">
+
+        <aside class="barra-lateral">
+            <input type="text" id="Buscador" name="Buscador" placeholder="Buscador"/>
+            <header>
+                <div class="foto">
+                    <img src="imagenes/Admin.jpg" alt="admin" class="admin" width="80">
+                </div>
+                <h2>Panel Administrador</h2>
+            </header>
+            
+            <nav>
+                <a href="usuarios.html" class="activo">Usuarios</a>
+                <a href="productos.html">Productos</a>
+                <a href="reportes.html">Reportes</a>
+                <a href="configuracion.html">Configuración</a>
+                <a href="index.html">Inicio</a>
+            </nav>
+        </aside>
+
+        <main class="contenido-derecha">
+            {% if usuarios %}
+        <section class="w-full max-w-2xl bg-white p-6 rounded-3xl shadow-xl border border-gray-100 mt-4">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Usuarios en la Base de Datos</h3>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Correo Electrónico</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td>{{ usuario[0] }}</td>
+                            <td>{{ usuario[1] }}</td>
+                            <td>{{ usuario[2] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+    </main>
+            <h1>Usuarios</h1>
+            <div class="tarjetas-ejemplo">
+                 <div class="tarjeta">
+                    <div class="menu-opciones">
+                        <button class="tres-puntos">⋮</button>
+                        <div class="desplegable">
+                            <a href="#">Editar</a>
+                            <a href="#" class="eliminar">Eliminar</a>
+                        </div>
+                    </div>
+                    Usuario: Sotelo <br> 
+                    Id: 1 <br> 
+                    Correo electronico: cristiansotelo.0.0m2@gmail.com <br> 
+                    Rol: Administrador <br> 
+                    Estado: Activo
+                </div>
+                <div class="tarjeta">
+                    <div class="menu-opciones">
+                        <button class="tres-puntos">⋮</button>
+                        <div class="desplegable">
+                            <a href="#">Editar</a>
+                            <a href="#" class="eliminar">Eliminar</a>
+                        </div>
+                    </div>
+                    Usuario: pepito <br> 
+                    Id: 2 <br> 
+                    Correo electronico: pepito@gmail.com <br> 
+                    Rol: Usuario <br> 
+                    Estado: Activo
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
