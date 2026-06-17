@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="EcoGreen" content="Venta de productos biodegradables">
     <title>Bienvenidos a EcoGreen</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,6 +21,7 @@
             <a href="{{ url_for('formulario') }}">Gestión de usuarios</a>
             <a href="{{ url_for('ventas') }}">Ventas</a>
             <a href="{{ url_for('seguimiento') }}">Seguimiento</a>
+            <a href="{{ url_for('cuenta') }}" class="fw-bold text-success border-start ps-3 ms-2">👤 Mi Cuenta</a>
         </nav>
     </header>
 
@@ -27,8 +29,14 @@
         
         <section class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 mb-5">
             
-            <form id="register-form" action="/procesar_registro" method="POST" class="flex flex-col gap-4">
+            <form id="register-form" action="/procesar_registro" method="POST" class="{% if error_login %}hidden{% endif %} flex flex-col gap-4">
                 <h2 class="text-2xl font-bold text-center text-gray-800">Crea tu cuenta</h2>
+                
+                {% if error_registro %}
+                <div class="alert alert-danger text-sm py-2 px-3 rounded-xl m-0 animate-bounce" role="alert">
+                    ⚠️ {{ error_registro }}
+                </div>
+                {% endif %}
                 
                 <input type="text" name="nombre" placeholder="Nombre completo" required 
                     class="w-full p-3 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67] transition"> 
@@ -48,8 +56,14 @@
                 </p>
             </form>
 
-            <form id="login-form" action="/procesar_formulario" method="post" class="hidden flex flex-col gap-4">
+            <form id="login-form" action="/procesar_formulario" method="post" class="{% if not error_login %}hidden{% endif %} flex flex-col gap-4">
                 <h2 class="text-2xl font-bold text-center text-gray-800">Bienvenido de nuevo</h2>
+                
+                {% if error_login %}
+                <div class="alert alert-danger text-sm py-2 px-3 rounded-xl m-0" role="alert">
+                    ❌ {{ error_login }}
+                </div>
+                {% endif %}
                 
                 <input type="text" id="nombre" name="nombre" placeholder="Nombre" required 
                     class="w-full p-3 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67] transition">
@@ -102,7 +116,7 @@
         {% endif %}
     </main>
 
-    <footer >
+    <footer>
         <p class="m-0">Derechos de autor © 2024 EcoGreen. Todos los derechos reservados.</p>
     </footer>
 
