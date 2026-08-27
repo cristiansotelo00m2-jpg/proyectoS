@@ -13,12 +13,12 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'clave_secreta_ecogreen_2026')
 
 db_config = {
-    'host': os.environ.get('DB_HOST', 'mysql-2484a5be-cristiansotelo-6b14.f.aivencloud.com'),        
-    'user': os.environ.get('DB_USER', 'avnadmin'), 
-    'port': int(os.environ.get('DB_PORT', 23508)),         
-    'password': os.environ.get('DB_PASSWORD', ''),     
-    'database': os.environ.get('DB_NAME', 'main'),
-    'ssl_ca': os.environ.get('DB_SSL_CA', 'ca.pem')
+    'host': os.environ.get('DB_HOST', 'mysql-2484a5be-cristiansotelo-6b14.f.aivencloud.com'),
+    'user': os.environ.get('DB_USER', 'avnadmin'),
+    'port': int(os.environ.get('DB_PORT', 23508)),
+    'password': os.environ.get('DB_PASSWORD', ''),
+    'database': os.environ.get('DB_NAME', 'defaultdb'),
+    'ssl_disabled': False,
 }
 
 def get_db_connection():
