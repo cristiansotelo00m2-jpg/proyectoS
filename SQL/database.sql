@@ -1,112 +1,127 @@
-CREATE DATABASE IF NOT EXISTS formulario;
-USE formulario;
+import json
+import mysql.connector
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 
--- Desactivamos temporalmente las revisiones de llaves foráneas para poder borrar sin problemas
-SET FOREIGN_KEY_CHECKS = 0;
+app = Flask(__name__)
+app.secret_key = 'tu_clave_secreta_ecogreen'
 
--- Borramos las tablas si quedaron mal creadas de intentos anteriores
-DROP TABLE IF EXISTS `carrito`, `detalle_ventas`, `devoluciones`, `facturas`, `seguimiento`, `ventas`, `usuarios`, `productos`, `metodos_pago`, `contactanos`;
+def get_db_connection():
+    return mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='',        # Tu contraseña de MySQL si la tienes
+        database='formulario' # Base de datos definida en tu script SQL
+    )
 
--- Volvemos a activar las revisiones
-SET FOREIGN_KEY_CHECKS = 1;
+@app.route('/cuenta')
+def cuenta():
+    if 'user_email' not in session:
+        flash('Debes iniciar sesión para acceder a tu cuenta.', 'warning')
+        return redirect(url_for('formulario'))
+    
+    correo_actual = session['user_email']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
 
+    usuario = None
+    compras = []
+    
+    total_recaudado = 0
+    ventas_totales_cant = 0
+    total_unidades_vendidas = 0
+    nombres_productos = []
+    cantidades_productos = []
 
--- 1. Tabla: usuarios (Aseguramos que se cree limpia con id_usuario)
-CREATE TABLE `usuarios` (
-  `id_usuario` INT AUTO_INCREMENT PRIMARY KEY,
-  `nombre` VARCHAR(100) NOT NULL,
-  `correo` VARCHAR(100) NOT NULL UNIQUE,
-  `password` VARCHAR(255) NOT NULL,
-  `rol` VARCHAR(20) DEFAULT 'cliente',
-  `fecha_registro` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    try:
+        # 1. Datos del usuario
+        cursor.execute('SELECT id_usuario, nombre, correo FROM usuarios WHERE correo = %s', (correo_actual,))
+        usuario = cursor.fetchone()
 
--- 2. Tabla: productos
-CREATE TABLE `productos` (
-  `id_producto` INT AUTO_INCREMENT PRIMARY KEY,
-  `nombre_prod` VARCHAR(100) NOT NULL,
-  `descripcion` TEXT DEFAULT NULL,
-  `precio` DECIMAL(10,2) NOT NULL,
-  `stock` INT DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        if usuario and usuario.get('id_usuario'):
+            # 2. Historial de compras del usuario
+            query_compras = """
+                SELECT 
+                    v.id_venta, 
+                    v.total, 
+                    v.estado_pago,
+                    COALESCE(s.estado_envio, 'Preparando pedido') AS estado_envio,
+                    COALESCE(s.numero_guia, 'N/A') AS numero_guia
+                FROM ventas v
+                LEFT JOIN seguimiento s ON v.id_venta = s.id_venta
+                WHERE v.id_usuario = %s
+                ORDER BY v.id_venta DESC
+            """
+            cursor.execute(query_compras, (usuario['id_usuario'],))
+            compras = cursor.fetchall()
 
--- 3. Tabla: metodos_pago
-CREATE TABLE `metodos_pago` (
-  `id_metodo_pago` INT AUTO_INCREMENT PRIMARY KEY,
-  `nombre_metodo` VARCHAR(50) NOT NULL,
-  `descripcion` VARCHAR(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    except mysql.connector.Error as err:
+        print(f"⚠️ Error usuario/compras: {err}")
 
--- 4. Tabla: carrito (Ahora sí encontrará id_usuario e id_producto)
-CREATE TABLE `carrito` (
-  `id_carrito` INT AUTO_INCREMENT PRIMARY KEY,
-  `id_usuario` INT DEFAULT NULL,
-  `id_producto` INT DEFAULT NULL,
-  `cantidad` INT NOT NULL,
-  FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE,
-  FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    # 3. Métricas Globales (Recaudo y Total Ventas)
+    try:
+        cursor.execute("SELECT COALESCE(SUM(total), 0) AS recaudo, COUNT(*) AS total_ventas FROM ventas")
+        stats = cursor.fetchone()
+        if stats:
+            total_recaudado = float(stats['recaudo'])
+            ventas_totales_cant = int(stats['total_ventas'])
+    except mysql.connector.Error as err:
+        print(f"⚠️ Error métricas: {err}")
 
--- 5. Tabla: ventas
-CREATE TABLE `ventas` (
-  `id_venta` INT AUTO_INCREMENT PRIMARY KEY,
-  `id_usuario` INT DEFAULT NULL,
-  `id_metodo_pago` INT DEFAULT NULL,
-  `fecha_venta` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `total` DECIMAL(10,2) NOT NULL,
-  `estado_pago` VARCHAR(100) DEFAULT '',
-  FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL,
-  FOREIGN KEY (`id_metodo_pago`) REFERENCES `metodos_pago` (`id_metodo_pago`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    # 4. Top productos vendidos (Usando nombre_prod de tu tabla productos)
+    try:
+        query_top_productos = """
+            SELECT p.nombre_prod AS nombre, COALESCE(SUM(dv.cantidad), 0) AS total_cant
+            FROM detalle_ventas dv
+            JOIN productos p ON dv.id_producto = p.id_producto
+            GROUP BY p.id_producto, p.nombre_prod
+            ORDER BY total_cant DESC
+            LIMIT 5
+        """
+        cursor.execute(query_top_productos)
+        top_productos = cursor.fetchall()
 
--- 6. Tabla: detalle_ventas
-CREATE TABLE `detalle_ventas` (
-  `id_detalle` INT AUTO_INCREMENT PRIMARY KEY,
-  `id_venta` INT DEFAULT NULL,
-  `id_producto` INT DEFAULT NULL,
-  `cantidad` INT NOT NULL,
-  `precio_unitario` DECIMAL(10,2) NOT NULL,
-  FOREIGN KEY (`id_venta`) REFERENCES `ventas` (`id_venta`) ON DELETE CASCADE,
-  FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        for item in top_productos:
+            cant = int(item['total_cant'])
+            if cant > 0:
+                nombres_productos.append(item['nombre'])
+                cantidades_productos.append(cant)
+                total_unidades_vendidas += cant
 
--- 7. Tabla: devoluciones
-CREATE TABLE `devoluciones` (
-  `id_devolucion` INT AUTO_INCREMENT PRIMARY KEY,
-  `id_venta` INT DEFAULT NULL,
-  `motivo` TEXT NOT NULL,
-  `estado_devolucion` VARCHAR(50) DEFAULT '',
-  `fecha_solicitud` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`id_venta`) REFERENCES `ventas` (`id_venta`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    except mysql.connector.Error as err:
+        print(f"⚠️ Error top productos: {err}")
+    finally:
+        cursor.close()
+        conn.close()
 
--- 8. Tabla: facturas
-CREATE TABLE `facturas` (
-  `id_factura` INT AUTO_INCREMENT PRIMARY KEY,
-  `id_venta` INT UNIQUE DEFAULT NULL,
-  `numero_factura` VARCHAR(50) UNIQUE DEFAULT NULL,
-  `datos_fiscales` TEXT DEFAULT NULL,
-  `fecha_emision` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`id_venta`) REFERENCES `ventas` (`id_venta`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    if usuario:
+        return render_template(
+            'cuenta.html', 
+            nombre_usuario=usuario['nombre'], 
+            correo_usuario=usuario['correo'],
+            compras=compras,
+            total_recaudado=total_recaudado,
+            ventas_totales_cant=ventas_totales_cant,
+            total_unidades_vendidas=total_unidades_vendidas,
+            nombres_productos=json.dumps(nombres_productos),
+            cantidades_productos=json.dumps(cantidades_productos)
+        )
+    
+    session.clear()
+    return redirect(url_for('formulario'))
 
--- 9. Tabla: seguimiento
-CREATE TABLE `seguimiento` (
-  `id_seguimiento` INT AUTO_INCREMENT PRIMARY KEY,
-  `id_venta` INT DEFAULT NULL,
-  `estado_envio` VARCHAR(50) DEFAULT '',
-  `numero_guia` VARCHAR(50) DEFAULT NULL,
-  `empresa_transporte` VARCHAR(50) DEFAULT NULL,
-  `ultima_actualizacion` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (`id_venta`) REFERENCES `ventas` (`id_venta`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- 10. Tabla: contactanos
-CREATE TABLE `contactanos` (
-  `id_contactanos` INT AUTO_INCREMENT PRIMARY KEY,
-  `contacto` VARCHAR(100) NOT NULL,
-  `correo_electronico` VARCHAR(100) NOT NULL,
-  `asunto` VARCHAR(150) DEFAULT NULL,
-  `mensaje` TEXT NOT NULL,
-  `fecha_envio` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+# Cambio del nombre de columna 'password' en MySQL
+@app.route('/actualizar_password', methods=['POST'])
+def actualizar_password():
+    if 'user_email' not in session:
+        return redirect(url_for('formulario'))
+    
+    nueva_password = request.form.get('nueva_password')
+    if nueva_password:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('UPDATE usuarios SET password = %s WHERE correo = %s', (nueva_password, session['user_email']))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        flash('Contraseña actualizada correctamente.', 'success')
+    return redirect(url_for('cuenta'))

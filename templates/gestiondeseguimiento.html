@@ -3,52 +3,411 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenidos a EcoGreen</title>
-    <link rel="stylesheet" href="static/style.css">
+    <title>Carrito y Rastreo de Pedidos - EcoGreen</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Leaflet.js (Mapa interactivo de rastreo sin API key) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .custom-map-icon, .custom-map-icon-truck { display: flex; align-items: center; justify-content: center; }
+    </style>
 </head>
-<body>
+<body class="bg-[#EEFFDB] min-h-screen flex flex-col justify-between">
 
+    <!-- HEADER -->
     <header>
         <div class="d-flex align-items-center gap-2 fw-bold" style="font-size: 14px; letter-spacing: 0.08em;">
             <span><strong>SOURCE VISION GAIN</strong></span>
         </div>
-        <nav>
-    <a href="{{ url_for('home') }}">Inicio</a>
-    <a href="{{ url_for('quienes_somos') }}">¿Quiénes somos?</a>
-    <a href="{{ url_for('formulario') }}">Gestión de usuarios</a>
-    <a href="{{ url_for('ventas') }}">Ventas</a>
-    <a href="{{ url_for('seguimiento') }}">Seguimiento</a>
-</nav>
+        <nav class="flex items-center gap-4 text-sm font-medium text-gray-600 flex-wrap">
+            <a href="{{ url_for('home') }}">Inicio</a>
+            <a href="{{ url_for('quienes_somos') }}">¿Quiénes somos?</a>
+            <a href="{{ url_for('formulario') }}">Gestión de usuarios</a>
+            <a href="{{ url_for('ventas') }}">Ventas</a>
+            <a href="{{ url_for('seguimiento') }}" class="font-bold text-[#4f7d67]">Seguimiento</a>            
+            <a href="{{ url_for('cuenta') }}" class="fw-bold text-success border-start ps-3 ms-2">👤 Mi Cuenta</a>
+        </nav>
     </header>
 
-    <main class="flex flex-col gap-6 my-[30px] mx-auto max-w-[800px] px-4">
+    <main class="flex-grow my-8 mx-auto max-w-[900px] w-full px-4">
 
-        <h2 class="text-center text-green-800 text-3xl font-bold">🛒 Tu Carrito</h2>
-
-        <div id="carrito-contenido"></div>
-
-        <div id="carrito-total" class="hidden text-right text-xl font-bold text-green-800 mt-4"></div>
-
-        <div class="flex justify-between mt-4">
-            <a href="gestiondeventas.html" class="bg-gray-200 text-gray-700 font-bold px-6 py-2 rounded-lg hover:bg-gray-300 transition">
-                ← Seguir comprando
-            </a>
-            <button id="btn-vaciar" onclick="vaciarCarrito()" class="hidden bg-red-100 text-red-600 font-bold px-6 py-2 rounded-lg hover:bg-red-200 transition">
-                Vaciar carrito
+        <!-- SELECTOR DE PESTAÑAS (CARRITO vs RASTREO) -->
+        <div class="flex justify-center gap-3 mb-8">
+            <button id="btn-tab-carrito" onclick="cambiarSeccion('seccion-carrito')" 
+                    class="px-6 py-3 font-bold text-sm rounded-2xl transition shadow-md bg-[#4f7d67] text-white flex items-center gap-2">
+                <span>🛒</span> Mi Carrito de Compras
             </button>
-            <button id="btn-comprar" onclick="finalizarCompra()" class="hidden bg-[#4f7d67] text-white font-bold px-6 py-2 rounded-lg hover:bg-[#3d6352] transition">
-                Finalizar compra
+            <button id="btn-tab-rastreo" onclick="cambiarSeccion('seccion-rastreo')" 
+                    class="px-6 py-3 font-bold text-sm rounded-2xl transition bg-white text-gray-700 hover:bg-gray-100 flex items-center gap-2 border border-gray-200">
+                <span>🚚</span> Rastrear mi Pedido
             </button>
         </div>
 
+        <!-- SECCIÓN 1: MI CARRITO DE COMPRAS -->
+        <section id="seccion-carrito" class="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100">
+            <h2 class="text-center text-[#4f7d67] text-2xl font-bold mb-6 flex items-center justify-center gap-2">
+                <span>🛒</span> Tu Carrito de Compras
+            </h2>
+
+            <div id="carrito-contenido" class="space-y-4"></div>
+
+            <div id="carrito-total" class="hidden text-right text-xl font-extrabold text-gray-800 mt-6 pt-4 border-t"></div>
+
+            <div class="flex flex-wrap justify-between items-center gap-4 mt-6">
+                <a href="{{ url_for('ventas') }}" class="bg-gray-100 text-gray-700 font-bold px-5 py-2.5 rounded-xl hover:bg-gray-200 transition text-sm">
+                    ← Seguir comprando
+                </a>
+                <div class="flex gap-3">
+                    <button id="btn-vaciar" onclick="vaciarCarrito()" class="hidden bg-red-50 text-red-600 font-bold px-5 py-2.5 rounded-xl hover:bg-red-100 transition text-sm">
+                        Vaciar carrito
+                    </button>
+                    <button id="btn-comprar" onclick="finalizarCompra()" class="hidden bg-[#4f7d67] text-white font-extrabold px-6 py-2.5 rounded-xl hover:bg-[#3d6352] transition shadow-lg text-sm">
+                        Continuar al Pago ➔
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- SECCIÓN 2: RASTREAR MI PEDIDO -->
+        <section id="seccion-rastreo" class="hidden bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100">
+            <div class="text-center mb-6">
+                <h2 class="text-[#4f7d67] text-2xl font-bold mb-2 flex items-center justify-center gap-2">
+                    <span>🔍</span> Rastreo de Envío en Tiempo Real
+                </h2>
+                <p class="text-xs text-gray-500">Ingresa tu número de pedido (ej: <strong>1</strong>) o tu número de guía de envío (ej: <strong>EG-000001</strong>)</p>
+            </div>
+
+            <!-- BUSCADOR -->
+            <form id="form-buscar-rastreo" onsubmit="realizarBusquedaRastreo(event)" class="flex gap-2 max-w-lg mx-auto mb-8">
+                <input type="text" id="input-busqueda-rastreo" placeholder="Ej: 1 o EG-000001" required
+                       class="w-full p-3 text-sm bg-gray-50 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67]">
+                <button type="submit" class="bg-[#4f7d67] text-white px-6 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition shadow-md whitespace-nowrap">
+                    Buscar 🔍
+                </button>
+            </form>
+
+            <!-- CONTENEDOR DE RESULTADOS DE RASTREO -->
+            <div id="resultado-rastreo" class="hidden">
+                <!-- CABECERA DEL PEDIDO -->
+                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold uppercase text-emerald-700 tracking-wider">Pedido Confirmado</span>
+                        <h3 class="text-xl font-extrabold text-gray-800 m-0" id="rastreo-id-pedido">Pedido #--</h3>
+                        <p class="text-xs text-gray-600 m-0 mt-1">Nro. de Guía: <strong id="rastreo-guia" class="text-emerald-800">EG-000000</strong></p>
+                    </div>
+                    <div class="text-left md:text-right">
+                        <span id="rastreo-badge-estado" class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                            Preparando pedido
+                        </span>
+                        <p class="text-[11px] text-gray-500 m-0 mt-1">Transportadora: <strong id="rastreo-empresa">Coordinadora</strong></p>
+                    </div>
+                </div>
+
+                <!-- LÍNEA DE TIEMPO VISUAL DE PASOS (PROGRESS BAR) -->
+                <div class="mb-8 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <h4 class="text-xs font-bold uppercase text-gray-500 mb-6 text-center">Estado del Envío</h4>
+                    
+                    <div class="grid grid-cols-4 gap-2 text-center relative">
+                        
+                        <!-- PASO 1 -->
+                        <div id="paso-1" class="flex flex-col items-center z-10">
+                            <div class="paso-icono w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-md mb-2">
+                                ✓
+                            </div>
+                            <p class="text-xs font-bold text-gray-800 m-0">Recibido</p>
+                            <span class="text-[10px] text-gray-400">Orden creada</span>
+                        </div>
+
+                        <!-- PASO 2 -->
+                        <div id="paso-2" class="flex flex-col items-center z-10">
+                            <div class="paso-icono w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm mb-2">
+                                2
+                            </div>
+                            <p class="text-xs font-bold text-gray-600 m-0">Preparando</p>
+                            <span class="text-[10px] text-gray-400">En bodega</span>
+                        </div>
+
+                        <!-- PASO 3 -->
+                        <div id="paso-3" class="flex flex-col items-center z-10">
+                            <div class="paso-icono w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm mb-2">
+                                3
+                            </div>
+                            <p class="text-xs font-bold text-gray-600 m-0">En Camino</p>
+                            <span class="text-[10px] text-gray-400">Con repartidor</span>
+                        </div>
+
+                        <!-- PASO 4 -->
+                        <div id="paso-4" class="flex flex-col items-center z-10">
+                            <div class="paso-icono w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm mb-2">
+                                4
+                            </div>
+                            <p class="text-xs font-bold text-gray-600 m-0">Entregado</p>
+                            <span class="text-[10px] text-gray-400">Completado</span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- MAPA INTERACTIVO EN TIEMPO REAL -->
+                <div class="mb-8 p-4 md:p-5 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
+                        <div>
+                            <h4 class="text-xs font-bold uppercase text-gray-700 m-0 flex items-center gap-2">
+                                <span>🗺️</span> Mapa de Ruta en Tiempo Real
+                            </h4>
+                            <p class="text-[11px] text-gray-500 m-0">Monitoreo de trayectoria desde la bodega central hasta tu dirección</p>
+                        </div>
+                        <span id="mapa-badge-status" class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                            🚚 En Ruta de Entrega
+                        </span>
+                    </div>
+
+                    <!-- CONTENEDOR LEAFLET -->
+                    <div id="mapa-rastreo" class="w-full h-[320px] rounded-xl border border-gray-200 shadow-inner z-0" style="min-height: 300px;"></div>
+
+                    <div class="flex justify-between items-center mt-3 text-[11px] text-gray-500 px-1">
+                        <span class="flex items-center gap-1">🏭 Origen: <strong id="mapa-origen-label" class="text-gray-700">Bogotá D.C. (Bodega Central EcoGreen)</strong></span>
+                        <span class="flex items-center gap-1">📍 Destino: <strong id="mapa-destino-label" class="text-gray-700">--</strong></span>
+                    </div>
+                </div>
+
+                <!-- DETALLES DE ENTREGA Y PAGO -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-xs text-gray-700">
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                        <h4 class="font-bold text-gray-800 mb-2 border-b pb-1">📍 Datos de Envío</h4>
+                        <p class="m-0 mb-1"><strong>Cliente:</strong> <span id="rastreo-cliente">--</span></p>
+                        <p class="m-0 mb-1"><strong>Teléfono:</strong> <span id="rastreo-telefono">--</span></p>
+                        <p class="m-0 mb-1"><strong>Dirección:</strong> <span id="rastreo-direccion">--</span></p>
+                        <p class="m-0"><strong>Ciudad:</strong> <span id="rastreo-ciudad">--</span></p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                        <h4 class="font-bold text-gray-800 mb-2 border-b pb-1">💳 Pago & Facturación</h4>
+                        <p class="m-0 mb-1"><strong>Método:</strong> <span id="rastreo-metodo-pago">--</span></p>
+                        <p class="m-0 mb-1"><strong>Detalle registrado:</strong> <span id="rastreo-detalles-pago" class="font-mono bg-white px-1.5 py-0.5 rounded border">--</span></p>
+                        <p class="m-0 mb-1"><strong>Estado Pago:</strong> <span id="rastreo-estado-pago" class="font-bold text-green-700">--</span></p>
+                        <p class="m-0"><strong>Fecha Venta:</strong> <span id="rastreo-fecha">--</span></p>
+                    </div>
+                </div>
+
+                <!-- RESUMEN DE PRODUCTOS -->
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                    <h4 class="font-bold text-gray-800 mb-3 border-b pb-2 text-xs">📦 Productos en la Orden</h4>
+                    <div id="rastreo-lista-productos" class="space-y-2 text-xs"></div>
+                    <div class="text-right font-extrabold text-base text-gray-800 mt-4 pt-2 border-t">
+                        Total: <span id="rastreo-total-monto" class="text-emerald-700">$0 COP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MENSAJE DE ERROR DE BÚSQUEDA -->
+            <div id="error-rastreo" class="hidden text-center py-8 text-red-600 font-semibold text-sm bg-red-50 rounded-2xl border border-red-200">
+                ⚠️ No se encontró información para el pedido ingresado.
+            </div>
+        </section>
+
     </main>
 
-    <footer>
-        <p>Derechos de autor © 2024 EcoGreen. Todos los derechos reservados.</p>
+    <!-- MODAL DE PAGO MEJORADO CON SELECCIÓN DE MÉTODO Y FORMULARIO DINÁMICO -->
+    <div id="modalPago" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm justify-center items-center z-50 p-4">
+        <div class="bg-white p-6 md:p-8 rounded-3xl w-full max-w-lg shadow-2xl transform transition-all duration-300 max-h-[92vh] overflow-y-auto">
+            
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-lg font-extrabold text-gray-800 m-0">💳 Finalizar Compra y Pago</h3>
+                <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+            </div>
+
+            <!-- PASO 1: DATOS DE ENVÍO -->
+            <div class="mb-6">
+                <h4 class="text-xs font-bold uppercase text-[#4f7d67] tracking-wider mb-3">1. Datos de Entrega</h4>
+                <div class="space-y-3 text-left">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Nombre Completo *</label>
+                        <input type="text" id="envio-nombre" class="w-full p-2.5 border border-gray-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4f7d67]" placeholder="Ej. Juan Pérez">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Teléfono *</label>
+                            <input type="tel" id="envio-telefono" class="w-full p-2.5 border border-gray-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4f7d67]" placeholder="Ej. 3123456789">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Ciudad *</label>
+                            <input type="text" id="envio-ciudad" class="w-full p-2.5 border border-gray-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4f7d67]" placeholder="Ej. Bogotá">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Dirección de Envío *</label>
+                        <input type="text" id="envio-direccion" class="w-full p-2.5 border border-gray-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4f7d67]" placeholder="Calle, Carrera, Apto, Barrio...">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Departamento *</label>
+                        <input type="text" id="envio-depto" class="w-full p-2.5 border border-gray-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4f7d67]" placeholder="Ej. Cundinamarca">
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO 2: MÉTODO DE PAGO -->
+            <div class="mb-6">
+                <h4 class="text-xs font-bold uppercase text-[#4f7d67] tracking-wider mb-3">2. Método de Pago</h4>
+                
+                <!-- OPCIONES VISUALES DE PAGO: PSE, DÉBITO Y CRÉDITO -->
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <button type="button" onclick="seleccionarMetodoPago('pse')" id="btn-metodo-pse"
+                            class="metodo-pago-card p-3 border-2 border-emerald-600 bg-emerald-50 rounded-2xl flex flex-col items-center justify-center text-center transition">
+                        <span class="text-xl mb-1">🏦</span>
+                        <span class="text-xs font-bold text-gray-800">PSE / Nequi</span>
+                        <span class="text-[10px] text-gray-500">Transferencia</span>
+                    </button>
+
+                    <button type="button" onclick="seleccionarMetodoPago('debito')" id="btn-metodo-debito"
+                            class="metodo-pago-card p-3 border-2 border-gray-200 hover:border-[#4f7d67] rounded-2xl flex flex-col items-center justify-center text-center transition">
+                        <span class="text-xl mb-1">💳</span>
+                        <span class="text-xs font-bold text-gray-800">Tarjeta Débito</span>
+                        <span class="text-[10px] text-gray-500">Cuenta / Ahorros</span>
+                    </button>
+
+                    <button type="button" onclick="seleccionarMetodoPago('credito')" id="btn-metodo-credito"
+                            class="metodo-pago-card p-3 border-2 border-gray-200 hover:border-[#4f7d67] rounded-2xl flex flex-col items-center justify-center text-center transition">
+                        <span class="text-xl mb-1">💳</span>
+                        <span class="text-xs font-bold text-gray-800">Tarjeta Crédito</span>
+                        <span class="text-[10px] text-gray-500">Cuotas / Franquicia</span>
+                    </button>
+                </div>
+
+                <!-- CAMPOS DINÁMICOS - PSE / NEQUI / TRANSFERENCIA -->
+                <div id="form-pago-pse" class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-left space-y-3">
+                    <h5 class="text-xs font-bold text-emerald-900 m-0">Pago mediante PSE / Nequi / Bancos</h5>
+                    <p class="text-[11px] text-emerald-800 m-0">Selecciona tu banco o Nequi e ingresa los datos de transferencia:</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-emerald-800 uppercase mb-1">Banco / Plataforma *</label>
+                            <select id="pago-pse-banco" class="w-full p-2.5 border border-emerald-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 font-semibold">
+                                <option value="Nequi">Nequi</option>
+                                <option value="Bancolombia">Bancolombia</option>
+                                <option value="Daviplata">Daviplata / Davivienda</option>
+                                <option value="Banco de Bogotá">Banco de Bogotá</option>
+                                <option value="BBVA">BBVA Colombia</option>
+                                <option value="Banco Agrario">Banco Agrario</option>
+                                <option value="Otro Banco (PSE)">Otro Banco (PSE)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-emerald-800 uppercase mb-1">Celular / Nro. Cuenta *</label>
+                            <input type="tel" id="pago-pse-celular" maxlength="15" placeholder="Ej. 3123456789"
+                                   class="w-full p-2.5 border border-emerald-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 font-mono">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-emerald-800 uppercase mb-1">CUS / Referencia o Comprobante (Opcional)</label>
+                        <input type="text" id="pago-pse-ref" placeholder="Ej. PSE-98765432"
+                               class="w-full p-2.5 border border-emerald-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 font-mono">
+                    </div>
+                </div>
+
+                <!-- CAMPOS DINÁMICOS - TARJETA DÉBITO -->
+                <div id="form-pago-debito" class="hidden p-4 bg-gray-50 rounded-2xl border border-gray-200 text-left space-y-3">
+                    <h5 class="text-xs font-bold text-gray-700 m-0">Datos de Cuenta Débito</h5>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Número de Cuenta / Débito *</label>
+                        <input type="text" id="pago-debito-numero" name="debito_acc_num" maxlength="19" oninput="formatearTarjeta(this)" placeholder="0000 0000 0000 0000" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
+                               class="w-full p-2.5 border border-gray-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#4f7d67] font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nombre del Titular *</label>
+                        <input type="text" id="pago-debito-titular" name="debito_acc_name" placeholder="Ej. JUAN PEREZ" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
+                               class="w-full p-2.5 border border-gray-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#4f7d67]">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Fecha de Expiración (MM/AA) *</label>
+                            <input type="text" id="pago-debito-exp" name="debito_acc_exp" maxlength="5" placeholder="MM/AA" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
+                                   class="w-full p-2.5 border border-gray-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#4f7d67] font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Código de Seguridad *</label>
+                            <input type="text" id="pago-debito-cvv" name="debito_acc_code" maxlength="4" placeholder="000" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
+                                   class="w-full p-2.5 border border-gray-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#4f7d67] font-mono">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CAMPOS DINÁMICOS - TARJETA CRÉDITO -->
+                <div id="form-pago-credito" class="hidden p-4 bg-blue-50 rounded-2xl border border-blue-200 text-left space-y-3">
+                    <h5 class="text-xs font-bold text-blue-900 m-0">Datos de Tarjeta Crédito</h5>
+                    <div>
+                        <label class="block text-[10px] font-bold text-blue-800 uppercase mb-1">Número de Registro Crédito *</label>
+                        <input type="text" id="pago-credito-numero" name="credito_acc_num" maxlength="19" oninput="formatearTarjeta(this)" placeholder="0000 0000 0000 0000" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
+                               class="w-full p-2.5 border border-blue-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-blue-800 uppercase mb-1">Nombre del Titular *</label>
+                        <input type="text" id="pago-credito-titular" name="credito_acc_name" placeholder="Ej. JUAN PEREZ" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
+                               class="w-full p-2.5 border border-blue-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-blue-800 uppercase mb-1">Fecha de Expiración (MM/AA) *</label>
+                            <input type="text" id="pago-credito-exp" name="credito_acc_exp" maxlength="5" placeholder="MM/AA" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
+                                   class="w-full p-2.5 border border-blue-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-blue-800 uppercase mb-1">Código de Seguridad *</label>
+                            <input type="text" id="pago-credito-cvv" name="credito_acc_code" maxlength="4" placeholder="000" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
+                                   class="w-full p-2.5 border border-blue-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTÓN DE CONFIRMACIÓN -->
+            <button type="button" onclick="procesarPagoFinal()" id="btn-confirmar-pago"
+                    class="w-full bg-[#4f7d67] hover:bg-[#3d6352] text-white font-extrabold py-3 rounded-2xl shadow-lg transition text-sm">
+                Confirmar y Pagar Pedido 🔒
+            </button>
+
+            <button onclick="cerrarModal()" class="w-full mt-3 text-xs text-gray-400 hover:text-gray-600 underline">
+                Cancelar y volver
+            </button>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t py-4 text-center text-xs text-gray-500 mt-12">
+        <p class="m-0">Derechos de autor © 2026 EcoGreen. Todos los derechos reservados.</p>
     </footer>
 
     <script>
+        function cambiarSeccion(seccionId) {
+            const secCarrito = document.getElementById('seccion-carrito');
+            const secRastreo = document.getElementById('seccion-rastreo');
+            const btnCarrito = document.getElementById('btn-tab-carrito');
+            const btnRastreo = document.getElementById('btn-tab-rastreo');
+
+            if (seccionId === 'seccion-carrito') {
+                secCarrito.classList.remove('hidden');
+                secRastreo.classList.add('hidden');
+                btnCarrito.className = "px-6 py-3 font-bold text-sm rounded-2xl transition shadow-md bg-[#4f7d67] text-white flex items-center gap-2";
+                btnRastreo.className = "px-6 py-3 font-bold text-sm rounded-2xl transition bg-white text-gray-700 hover:bg-gray-100 flex items-center gap-2 border border-gray-200";
+            } else {
+                secRastreo.classList.remove('hidden');
+                secCarrito.classList.add('hidden');
+                btnRastreo.className = "px-6 py-3 font-bold text-sm rounded-2xl transition shadow-md bg-[#4f7d67] text-white flex items-center gap-2";
+                btnCarrito.className = "px-6 py-3 font-bold text-sm rounded-2xl transition bg-white text-gray-700 hover:bg-gray-100 flex items-center gap-2 border border-gray-200";
+                
+                // Autofoco en el input de búsqueda
+                setTimeout(() => {
+                    const input = document.getElementById('input-busqueda-rastreo');
+                    if (input) input.focus();
+                }, 100);
+            }
+        }
+
         function renderizarCarrito() {
             const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
             const contenido = document.getElementById('carrito-contenido');
@@ -58,10 +417,10 @@
 
             if (carrito.length === 0) {
                 contenido.innerHTML = `
-                    <div class="text-center text-gray-500 py-16">
-                        <p class="text-5xl mb-4">🛒</p>
-                        <p class="text-lg">Tu carrito está vacío.</p>
-                        <a href="gestiondeventas.html" class="text-[#4f7d67] font-bold underline mt-2 inline-block">Ver productos</a>
+                    <div class="text-center text-gray-500 py-12">
+                        <p class="text-5xl mb-3">🛒</p>
+                        <p class="text-base font-bold">Tu carrito está vacío.</p>
+                        <a href="{{ url_for('ventas') }}" class="text-[#4f7d67] font-bold underline text-xs mt-2 inline-block">Ver catálogo de productos</a>
                     </div>`;
                 totalDiv.classList.add('hidden');
                 btnVaciar.classList.add('hidden');
@@ -76,24 +435,24 @@
                 const subtotal = producto.precio * producto.cantidad;
                 total += subtotal;
                 html += `
-                    <div class="flex items-center gap-4 border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
-                        <img src="${producto.imagen}" alt="${producto.nombre}" class="w-20 h-20 object-cover rounded-lg">
+                    <div class="flex items-center gap-4 border border-gray-100 rounded-2xl p-4 bg-gray-50 hover:bg-white transition shadow-sm">
+                        <img src="${producto.imagen}" alt="${producto.nombre}" class="w-16 h-16 object-cover rounded-xl border">
                         <div class="flex-1">
-                            <h3 class="font-bold text-lg">${producto.nombre}</h3>
-                            <p class="text-green-700 font-bold">$${producto.precio.toLocaleString()}</p>
+                            <h3 class="font-bold text-sm text-gray-800">${producto.nombre}</h3>
+                            <p class="text-emerald-700 font-bold text-xs">$${producto.precio.toLocaleString()} COP</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="cambiarCantidad(${index}, -1)" class="bg-gray-200 px-3 py-1 rounded-lg font-bold hover:bg-gray-300">−</button>
-                            <span class="font-bold text-lg w-6 text-center">${producto.cantidad}</span>
-                            <button onclick="cambiarCantidad(${index}, 1)" class="bg-gray-200 px-3 py-1 rounded-lg font-bold hover:bg-gray-300">+</button>
+                            <button onclick="cambiarCantidad(${index}, -1)" class="bg-gray-200 text-gray-800 px-2.5 py-1 rounded-lg font-bold hover:bg-gray-300 text-xs">−</button>
+                            <span class="font-bold text-sm w-6 text-center">${producto.cantidad}</span>
+                            <button onclick="cambiarCantidad(${index}, 1)" class="bg-gray-200 text-gray-800 px-2.5 py-1 rounded-lg font-bold hover:bg-gray-300 text-xs">+</button>
                         </div>
-                        <p class="font-bold text-green-800 w-24 text-right">$${subtotal.toLocaleString()}</p>
-                        <button onclick="eliminarProducto(${index})" class="text-red-400 hover:text-red-600 text-xl ml-2">✕</button>
+                        <p class="font-extrabold text-emerald-800 w-24 text-right text-sm">$${subtotal.toLocaleString()}</p>
+                        <button onclick="eliminarProducto(${index})" class="text-red-400 hover:text-red-600 text-lg ml-2">✕</button>
                     </div>`;
             });
 
             contenido.innerHTML = html;
-            totalDiv.textContent = `Total: $${total.toLocaleString()}`;
+            totalDiv.textContent = `Total a Pagar: $${total.toLocaleString()} COP`;
             totalDiv.classList.remove('hidden');
             btnVaciar.classList.remove('hidden');
             btnComprar.classList.remove('hidden');
@@ -120,12 +479,447 @@
         }
 
         function finalizarCompra() {
-            alert('¡Compra finalizada! Gracias por tu pedido.');
-            localStorage.removeItem('carrito');
-            renderizarCarrito();
+            const modalPago = document.getElementById('modalPago');
+            modalPago.classList.remove('hidden');
+            modalPago.classList.add('flex');
         }
 
-        renderizarCarrito();
+        function cerrarModal() {
+            const modalPago = document.getElementById('modalPago');
+            modalPago.classList.add('hidden');
+            modalPago.classList.remove('flex');
+        }
+
+        let metodoSeleccionadoActual = 'pse';
+
+        function seleccionarMetodoPago(metodo) {
+            metodoSeleccionadoActual = metodo;
+
+            const btnPse = document.getElementById('btn-metodo-pse');
+            const btnDebito = document.getElementById('btn-metodo-debito');
+            const btnCredito = document.getElementById('btn-metodo-credito');
+
+            const formPse = document.getElementById('form-pago-pse');
+            const formDebito = document.getElementById('form-pago-debito');
+            const formCredito = document.getElementById('form-pago-credito');
+
+            [btnPse, btnDebito, btnCredito].forEach(b => {
+                b.className = "metodo-pago-card p-3 border-2 border-gray-200 hover:border-[#4f7d67] rounded-2xl flex flex-col items-center justify-center text-center transition";
+            });
+            [formPse, formDebito, formCredito].forEach(f => f.classList.add('hidden'));
+
+            if (metodo === 'pse') {
+                btnPse.className = "metodo-pago-card p-3 border-2 border-emerald-600 bg-emerald-50 rounded-2xl flex flex-col items-center justify-center text-center transition";
+                formPse.classList.remove('hidden');
+            } else if (metodo === 'debito') {
+                btnDebito.className = "metodo-pago-card p-3 border-2 border-[#4f7d67] bg-emerald-50 rounded-2xl flex flex-col items-center justify-center text-center transition";
+                formDebito.classList.remove('hidden');
+            } else if (metodo === 'credito') {
+                btnCredito.className = "metodo-pago-card p-3 border-2 border-blue-600 bg-blue-50 rounded-2xl flex flex-col items-center justify-center text-center transition";
+                formCredito.classList.remove('hidden');
+            }
+        }
+
+        function formatearTarjeta(input) {
+            let val = input.value.replace(/\D/g, '');
+            let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
+            input.value = formatted.substring(0, 19);
+        }
+
+        function procesarPagoFinal() {
+            const nombre = document.getElementById('envio-nombre').value.trim();
+            const telefono = document.getElementById('envio-telefono').value.trim();
+            const direccion = document.getElementById('envio-direccion').value.trim();
+            const ciudad = document.getElementById('envio-ciudad').value.trim();
+            const depto = document.getElementById('envio-depto').value.trim();
+
+            if (!nombre || !telefono || !direccion || !ciudad || !depto) {
+                alert('⚠️ Por favor completa todos tus datos de entrega obligatorios.');
+                return;
+            }
+
+            const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            if (carrito.length === 0) {
+                alert('⚠️ Tu carrito está vacío.');
+                return;
+            }
+
+            let total = 0;
+            carrito.forEach(p => { total += p.precio * p.cantidad; });
+
+            let nombreMetodo = 'PSE / Transferencia';
+            let detallesPago = '';
+
+            if (metodoSeleccionadoActual === 'pse') {
+                const banco = document.getElementById('pago-pse-banco').value;
+                const cel = document.getElementById('pago-pse-celular').value.trim();
+                const ref = document.getElementById('pago-pse-ref').value.trim();
+
+                if (!cel || cel.length < 8) {
+                    alert('⚠️ Por favor ingresa el número celular o de cuenta para el pago por PSE.');
+                    return;
+                }
+
+                nombreMetodo = `PSE / Transferencia (${banco})`;
+                detallesPago = `PSE (${banco}) - Nro: ${cel}`;
+                if (ref) detallesPago += ` [CUS/Ref: ${ref}]`;
+
+            } else if (metodoSeleccionadoActual === 'debito') {
+                const num = document.getElementById('pago-debito-numero').value.replace(/\s+/g, '');
+                const titular = document.getElementById('pago-debito-titular').value.trim();
+                const exp = document.getElementById('pago-debito-exp').value.trim();
+                const cvv = document.getElementById('pago-debito-cvv').value.trim();
+
+                if (num.length < 15 || !titular || !exp || !cvv) {
+                    alert('⚠️ Por favor completa los datos de tu tarjeta de débito (Número, titular, fecha y CVV).');
+                    return;
+                }
+
+                nombreMetodo = 'Tarjeta de Débito';
+                const ult4 = num.slice(-4);
+                detallesPago = `Débito **** **** **** ${ult4} (${titular.toUpperCase()})`;
+
+            } else if (metodoSeleccionadoActual === 'credito') {
+                const num = document.getElementById('pago-credito-numero').value.replace(/\s+/g, '');
+                const titular = document.getElementById('pago-credito-titular').value.trim();
+                const exp = document.getElementById('pago-credito-exp').value.trim();
+                const cvv = document.getElementById('pago-credito-cvv').value.trim();
+
+                if (num.length < 15 || !titular || !exp || !cvv) {
+                    alert('⚠️ Por favor completa los datos de tu tarjeta de crédito (Número, titular, fecha y CVV).');
+                    return;
+                }
+
+                nombreMetodo = 'Tarjeta de Crédito';
+                const ult4 = num.slice(-4);
+                detallesPago = `Crédito **** **** **** ${ult4} (${titular.toUpperCase()})`;
+            }
+
+            const datosPayload = {
+                nombre: nombre,
+                telefono: telefono,
+                direccion: direccion,
+                ciudad: ciudad,
+                departamento: depto,
+                metodo_pago: nombreMetodo,
+                detalles_pago: detallesPago,
+                total: total,
+                carrito: carrito
+            };
+
+            const btnConfirmar = document.getElementById('btn-confirmar-pago');
+            btnConfirmar.disabled = true;
+            btnConfirmar.textContent = 'Procesando pago seguro... ⏳';
+
+            fetch('/finalizar-compra', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosPayload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                btnConfirmar.disabled = false;
+                btnConfirmar.textContent = 'Confirmar y Pagar Pedido 🔒';
+
+                if (data.status === 'success') {
+                    localStorage.setItem('ultimo_pedido', data.id_venta);
+                    localStorage.setItem('ultima_guia', data.numero_guia);
+                    localStorage.removeItem('carrito');
+                    alert(`🎉 ¡Pedido #${data.id_venta} registrado con éxito!\nNro. de Guía: ${data.numero_guia}\nGenerando tu comprobante digital...`);
+                    window.location.href = `/factura/${data.id_venta}`;
+                } else {
+                    alert('❌ Error al procesar el pago: ' + data.message);
+                }
+            })
+            .catch(err => {
+                btnConfirmar.disabled = false;
+                btnConfirmar.textContent = 'Confirmar y Pagar Pedido 🔒';
+                console.error('Error:', err);
+                alert('❌ Error de conexión con el servidor.');
+            });
+        }
+
+        // BÚSQUEDA Y LÍNEA DE TIEMPO DE RASTREO
+        function realizarBusquedaRastreo(e, valorPredeterminado) {
+            if (e) e.preventDefault();
+            const inputEl = document.getElementById('input-busqueda-rastreo');
+            const query = valorPredeterminado || (inputEl ? inputEl.value.trim() : '');
+            
+            const contResultado = document.getElementById('resultado-rastreo');
+            const contError = document.getElementById('error-rastreo');
+
+            if (!query) {
+                contResultado.classList.add('hidden');
+                contError.classList.remove('hidden');
+                contError.textContent = '⚠️ Por favor escribe tu número de pedido (ej: 1) o tu número de guía (ej: EG-000001) para iniciar la búsqueda.';
+                if (inputEl) inputEl.focus();
+                return;
+            }
+
+            fetch(`/api/rastrear?busqueda=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const p = data.pedido;
+                    contError.classList.add('hidden');
+                    contResultado.classList.remove('hidden');
+
+                    document.getElementById('rastreo-id-pedido').textContent = `Pedido #${p.id_venta}`;
+                    document.getElementById('rastreo-guia').textContent = p.numero_guia || 'EG-000000';
+                    document.getElementById('rastreo-empresa').textContent = p.empresa_transporte || 'Coordinadora';
+                    document.getElementById('rastreo-badge-estado').textContent = p.estado_envio;
+
+                    document.getElementById('rastreo-cliente').textContent = p.nombre_cliente;
+                    document.getElementById('rastreo-telefono').textContent = p.telefono_contacto;
+                    document.getElementById('rastreo-direccion').textContent = p.direccion_envio;
+                    document.getElementById('rastreo-ciudad').textContent = `${p.ciudad} - ${p.departamento}`;
+
+                    document.getElementById('rastreo-metodo-pago').textContent = p.metodo_pago;
+                    document.getElementById('rastreo-detalles-pago').textContent = p.detalles_pago;
+                    document.getElementById('rastreo-estado-pago').textContent = p.estado_pago;
+                    document.getElementById('rastreo-fecha').textContent = p.fecha_venta;
+                    document.getElementById('rastreo-total-monto').textContent = `$${Number(p.total).toLocaleString()} COP`;
+
+                    // Actualizar Pasos de la Línea de Tiempo
+                    actualizarLineaDeTiempo(p.estado_envio);
+
+                    // Actualizar Mapa Interactivo
+                    actualizarMapaRastreo(p);
+
+                    // Lista de Productos
+                    let prodsHtml = '';
+                    (p.productos || []).forEach(prod => {
+                        prodsHtml += `
+                            <div class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-gray-100">
+                                <div>
+                                    <span class="font-bold text-gray-800">${prod.nombre_prod}</span>
+                                    <span class="text-gray-400 text-[11px] ml-2">x${prod.cantidad} u.</span>
+                                </div>
+                                <span class="font-bold text-emerald-800">$${Number(prod.subtotal).toLocaleString()} COP</span>
+                            </div>`;
+                    });
+                    document.getElementById('rastreo-lista-productos').innerHTML = prodsHtml;
+
+                } else {
+                    contResultado.classList.add('hidden');
+                    contError.classList.remove('hidden');
+                    contError.textContent = `⚠️ ${data.message}`;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                contResultado.classList.add('hidden');
+                contError.classList.remove('hidden');
+                contError.textContent = '⚠️ Error al conectar con el servidor para obtener el rastreo.';
+            });
+        }
+
+        function actualizarLineaDeTiempo(estado) {
+            const estadoLower = (estado || '').toLowerCase();
+            let nivel = 1;
+            if (estadoLower.includes('preparando') || estadoLower.includes('bodega')) nivel = 2;
+            if (estadoLower.includes('camino') || estadoLower.includes('despachado') || estadoLower.includes('transito')) nivel = 3;
+            if (estadoLower.includes('entregado') || estadoLower.includes('recibido cliente')) nivel = 4;
+
+            for (let i = 1; i <= 4; i++) {
+                const elem = document.getElementById(`paso-${i}`);
+                if (!elem) continue;
+                const icono = elem.querySelector('.paso-icono');
+
+                if (i <= nivel) {
+                    icono.className = "paso-icono w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-md mb-2";
+                    icono.textContent = "✓";
+                } else {
+                    icono.className = "paso-icono w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm mb-2";
+                    icono.textContent = i;
+                }
+            }
+        }
+
+        // GEOCODIFICADOR ESTRUCTURADO PARA BOGOTÁ D.C.
+        async function obtenerCoordenadasBogota(direccionStr) {
+            const defaultDestino = { lat: 4.6500, lng: -74.0600 }; // Chapinero por defecto
+            if (!direccionStr || typeof direccionStr !== 'string') return defaultDestino;
+
+            // 1. Geocodificación en tiempo real con Nominatim OpenStreetMap (Bogotá, Colombia)
+            try {
+                const queryStr = `${direccionStr}, Bogotá, Colombia`;
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryStr)}&limit=1`);
+                const results = await res.json();
+                if (results && results.length > 0) {
+                    const latFound = parseFloat(results[0].lat);
+                    const lonFound = parseFloat(results[0].lon);
+                    if (latFound >= 4.45 && latFound <= 4.85 && lonFound >= -74.25 && lonFound <= -74.00) {
+                        return { lat: latFound, lng: lonFound, fuente: 'Nominatim' };
+                    }
+                }
+            } catch (err) {
+                console.warn('Geocodificación Nominatim no disponible:', err);
+            }
+
+            // 2. Algoritmo cuadrícula Bogotá (Calle/Carrera) como respaldo instantáneo
+            const dirLower = direccionStr.toLowerCase();
+            const calleMatch = dirLower.match(/(?:calle|clle|cl|c)\s*#?\s*(\d+)/);
+            const craMatch = dirLower.match(/(?:carrera|cra|cr|kr|k|av|avenida)\s*#?\s*(\d+)/);
+
+            if (calleMatch || craMatch) {
+                const numCalle = calleMatch ? parseInt(calleMatch[1]) : 45;
+                const numCra = craMatch ? parseInt(craMatch[1]) : 15;
+
+                // Centro de referencia (Calle 26 con Carrera 14): Lat 4.6150, Lng -74.0700
+                let latCalculada = 4.6150 + ((numCalle - 26) * 0.0009);
+                let lngCalculada = -74.0700 - ((numCra - 14) * 0.0009);
+
+                latCalculada = Math.min(Math.max(latCalculada, 4.5200), 4.7700);
+                lngCalculada = Math.min(Math.max(lngCalculada, -74.1700), -74.0300);
+
+                return { lat: latCalculada, lng: lngCalculada, fuente: 'Cuadrícula Bogotá' };
+            }
+
+            return defaultDestino;
+        }
+
+        let mapaRastreo = null;
+        let marcadorOrigen = null;
+        let marcadorDestino = null;
+        let marcadorVehiculo = null;
+        let lineaRuta = null;
+
+        async function actualizarMapaRastreo(pedido) {
+            const contenedorMapa = document.getElementById('mapa-rastreo');
+            if (!contenedorMapa) return;
+
+            // Coordenadas Origen: Bodega Central EcoGreen Bogotá (Puente Aranda)
+            const origenLat = 4.6300;
+            const origenLng = -74.1000;
+
+            // Coordenadas Destino: Geocodificadas desde la dirección de envío del pedido en Bogotá
+            const coordsDestino = await obtenerCoordenadasBogota(pedido.direccion_envio);
+            const destinoLat = coordsDestino.lat;
+            const destinoLng = coordsDestino.lng;
+
+            const elemDestinoLabel = document.getElementById('mapa-destino-label');
+            if (elemDestinoLabel) {
+                elemDestinoLabel.textContent = `Bogotá D.C. - ${pedido.direccion_envio || 'Dirección de envío'}`;
+            }
+
+            // Calcular posición del camión según estado_envio
+            let porcentajeRuta = 0.1;
+            const estadoLower = (pedido.estado_envio || '').toLowerCase();
+            if (estadoLower.includes('preparando') || estadoLower.includes('bodega')) {
+                porcentajeRuta = 0.15;
+            } else if (estadoLower.includes('camino') || estadoLower.includes('despachado') || estadoLower.includes('transito')) {
+                porcentajeRuta = 0.60;
+            } else if (estadoLower.includes('entregado') || estadoLower.includes('recibido cliente')) {
+                porcentajeRuta = 1.0;
+            }
+
+            const vehiculoLat = origenLat + (destinoLat - origenLat) * porcentajeRuta;
+            const vehiculoLng = origenLng + (destinoLng - origenLng) * porcentajeRuta;
+
+            const badgeMap = document.getElementById('mapa-badge-status');
+            if (badgeMap) {
+                badgeMap.textContent = `📍 ${pedido.estado_envio || 'En proceso'}`;
+            }
+
+            // Inicializar mapa si no existe
+            if (!mapaRastreo) {
+                mapaRastreo = L.map('mapa-rastreo').setView([vehiculoLat, vehiculoLng], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap'
+                }).addTo(mapaRastreo);
+            }
+
+            // Limpiar capas previas
+            if (marcadorOrigen) mapaRastreo.removeLayer(marcadorOrigen);
+            if (marcadorDestino) mapaRastreo.removeLayer(marcadorDestino);
+            if (marcadorVehiculo) mapaRastreo.removeLayer(marcadorVehiculo);
+            if (lineaRuta) mapaRastreo.removeLayer(lineaRuta);
+
+            // Iconos personalizados con HTML DivIcon
+            const iconoOrigen = L.divIcon({
+                html: '<div style="font-size:24px; text-shadow:0 2px 4px rgba(0,0,0,0.3);">🏭</div>',
+                className: 'custom-map-icon',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            const iconoDestino = L.divIcon({
+                html: '<div style="font-size:24px; text-shadow:0 2px 4px rgba(0,0,0,0.3);">🏠</div>',
+                className: 'custom-map-icon',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            const iconoVehiculo = L.divIcon({
+                html: '<div style="font-size:26px; background:white; border-radius:50%; width:34px; height:34px; box-shadow:0 3px 8px rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center;">🚚</div>',
+                className: 'custom-map-icon-truck',
+                iconSize: [34, 34],
+                iconAnchor: [17, 17]
+            });
+
+            marcadorOrigen = L.marker([origenLat, origenLng], { icon: iconoOrigen })
+                .addTo(mapaRastreo)
+                .bindPopup('<b>🏭 Bodega Central EcoGreen Bogotá</b><br>Zona Industrial Puente Aranda');
+
+            marcadorDestino = L.marker([destinoLat, destinoLng], { icon: iconoDestino })
+                .addTo(mapaRastreo)
+                .bindPopup(`<b>🏠 Destino de Entrega</b><br>${pedido.nombre_cliente}<br>📍 ${pedido.direccion_envio}, Bogotá D.C.`);
+
+            marcadorVehiculo = L.marker([vehiculoLat, vehiculoLng], { icon: iconoVehiculo })
+                .addTo(mapaRastreo)
+                .bindPopup(`<b>🚚 Transporte (${pedido.empresa_transporte || 'Coordinadora'})</b><br>Estado: <strong>${pedido.estado_envio}</strong><br>Guía: ${pedido.numero_guia}`);
+
+            lineaRuta = L.polyline([
+                [origenLat, origenLng],
+                [vehiculoLat, vehiculoLng],
+                [destinoLat, destinoLng]
+            ], {
+                color: '#4f7d67',
+                weight: 5,
+                opacity: 0.85,
+                dashArray: '8, 8'
+            }).addTo(mapaRastreo);
+
+            const bounds = L.latLngBounds([
+                [origenLat, origenLng],
+                [destinoLat, destinoLng]
+            ]);
+            mapaRastreo.fitBounds(bounds, { padding: [45, 45] });
+
+            setTimeout(() => {
+                if (mapaRastreo) mapaRastreo.invalidateSize();
+            }, 300);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderizarCarrito();
+
+            // Detectar parámetros de la URL (?guia=, ?id= o ?tab=)
+            const urlParams = new URLSearchParams(window.location.search);
+            const guiaParam = urlParams.get('guia') || urlParams.get('id');
+            const tabParam = urlParams.get('tab');
+
+            if (guiaParam || tabParam === 'rastreo') {
+                cambiarSeccion('seccion-rastreo');
+                if (guiaParam) {
+                    const inputEl = document.getElementById('input-busqueda-rastreo');
+                    if (inputEl) inputEl.value = guiaParam;
+                    realizarBusquedaRastreo(null, guiaParam);
+                }
+            } else {
+                // Por defecto mostrar el carrito
+                cambiarSeccion('seccion-carrito');
+            }
+
+            const modalPago = document.getElementById('modalPago');
+            window.addEventListener('click', (e) => {
+                if (e.target === modalPago) {
+                    cerrarModal();
+                }
+            });
+        });
     </script>
 </body>
 </html>

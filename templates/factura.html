@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura de Venta #{{ "%06d"|format(venta.id_venta) }} - EcoGreen</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .gradient-border {
+            background: linear-gradient(135deg, #10b981, #059669, #047857);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        @media print {
+            .no-imprimir {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .sombra-factura {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+                max-width: 100% !important;
+                border-radius: 0 !important;
+                padding: 1.5rem !important;
+            }
+
+            tr {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 min-h-screen py-8 px-4 flex flex-col items-center justify-start text-slate-800 antialiased">
+
+    <!-- Barra de Acciones Superior (No Imprimible) -->
+    <div class="w-full max-w-3xl flex flex-wrap justify-between items-center gap-3 mb-6 no-imprimir">
+        <a href="{{ url_for('home') }}"
+            class="inline-flex items-center gap-2 bg-slate-800/80 hover:bg-slate-800 text-slate-200 font-semibold px-4 py-2.5 rounded-xl shadow-lg border border-slate-700 hover:border-emerald-500/50 transition-all duration-200 text-sm backdrop-blur-md group">
+            <svg class="w-4 h-4 text-emerald-400 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Volver al Inicio
+        </a>
+
+        <div class="flex items-center gap-3">
+            <button onclick="window.print()"
+                class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-900/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-sm cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                    </path>
+                </svg>
+                Imprimir / PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Contenedor Principal de la Factura -->
+    <div class="sombra-factura bg-white w-full max-w-3xl rounded-3xl shadow-2xl p-8 sm:p-10 border border-slate-100 relative overflow-hidden">
+
+        <!-- Decoración Superior Gradient Header Bar -->
+        <div class="absolute top-0 left-0 w-full h-3 gradient-border"></div>
+
+        <!-- Encabezado de la Factura -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-6 mb-8 gap-4 pt-2">
+            <div>
+                <div class="flex items-center gap-2.5 mb-1.5">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-emerald-500/20">
+                        🌱
+                    </div>
+                    <div>
+                        <span class="text-3xl font-extrabold tracking-tight text-slate-900">Eco<span class="text-emerald-600">Green</span></span>
+                    </div>
+                </div>
+                <p class="text-xs font-bold text-emerald-800 uppercase tracking-widest">Comprobante de Venta Electrónico</p>
+                <p class="text-[11px] text-slate-400 font-medium">NIT: 901.482.910-3 | EcoGreen Colombia S.A.S.</p>
+            </div>
+
+            <div class="sm:text-right bg-emerald-50/60 sm:bg-transparent p-4 sm:p-0 rounded-2xl w-full sm:w-auto border sm:border-0 border-emerald-100/50">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 mb-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    {{ venta.estado_pago or 'Aprobado' }}
+                </div>
+
+                <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">FAC-{{ "%06d"|format(venta.id_venta) }}</h2>
+
+                {% if venta.fecha_venta %}
+                <p class="text-xs text-slate-500 font-medium mt-0.5">
+                    <span class="text-slate-400">Fecha de emisión:</span> {{ venta.fecha_venta }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Información del Cliente y Entrega -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <!-- Tarjeta Cliente -->
+            <div class="bg-slate-50/80 p-5 rounded-2xl border border-slate-100 flex flex-col justify-between hover:border-emerald-200 transition-colors">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Información del Cliente</h3>
+                    </div>
+                    <p class="text-base font-bold text-slate-800">{{ venta.nombre_cliente or 'Cliente EcoGreen' }}</p>
+
+                    <div class="mt-2.5 space-y-1.5 text-xs text-slate-600">
+                        <p class="flex items-center gap-2">
+                            <span class="font-medium text-slate-400">Teléfono:</span>
+                            <span class="font-semibold text-slate-700">{{ venta.telefono_contacto or 'N/A' }}</span>
+                        </p>
+                        {% if venta.correo_usuario %}
+                        <p class="flex items-center gap-2">
+                            <span class="font-medium text-slate-400">Email:</span>
+                            <span class="font-semibold text-slate-700 truncate">{{ venta.correo_usuario }}</span>
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta Dirección y Pago -->
+            <div class="bg-slate-50/80 p-5 rounded-2xl border border-slate-100 flex flex-col justify-between hover:border-emerald-200 transition-colors">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Envío y Método de Pago</h3>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-800">{{ venta.direccion_envio or 'Dirección no registrada' }}</p>
+                    <p class="text-xs text-slate-500 mt-0.5">{{ venta.ciudad or '' }} {{ ('- ' ~ venta.departamento) if venta.departamento else '' }}</p>
+
+                    <div class="mt-3 pt-2.5 border-t border-slate-200/60 space-y-1 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400 font-medium">Método de pago:</span>
+                            <span class="font-bold text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-lg capitalize">
+                                {{ venta.nombre_metodo or 'Tarjeta / Nequi' }}
+                            </span>
+                        </div>
+                        {% if venta.detalles_pago %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400 font-medium">Detalle Pago:</span>
+                            <span class="font-mono text-[11px] font-semibold text-slate-700">
+                                {{ venta.detalles_pago }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400 font-medium">Estado del Envío:</span>
+                            <span class="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
+                                🚚 {{ venta.estado_envio or 'Preparando pedido' }}
+                            </span>
+                        </div>
+                        {% if venta.numero_guia %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400 font-medium">Nro. Guía:</span>
+                            <span class="font-mono text-xs font-bold text-emerald-700">
+                                {{ venta.numero_guia }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Productos -->
+        <div class="overflow-x-auto mb-8 rounded-2xl border border-slate-100 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
+                        <th class="py-3.5 px-4 rounded-tl-xl">Producto</th>
+                        <th class="py-3.5 px-4 text-center">Cant.</th>
+                        <th class="py-3.5 px-4 text-right">Precio Unit.</th>
+                        <th class="py-3.5 px-4 text-right rounded-tr-xl">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm bg-white">
+                    {% if detalles %}
+                    {% for item in detalles %}
+                    <tr class="hover:bg-emerald-50/30 transition-colors">
+                        <td class="py-4 px-4 font-semibold text-slate-800">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                {{ item.nombre_prod }}
+                            </div>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <span class="bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg text-xs font-bold">
+                                {{ item.cantidad }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-4 text-right text-slate-600 font-medium">
+                            ${{ "{:,.0f}".format(item.precio_unitario|float) }}
+                        </td>
+                        <td class="py-4 px-4 text-right font-bold text-slate-900">
+                            ${{ "{:,.0f}".format(item.subtotal_item|float) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-slate-400 italic">
+                            No se encontraron productos asociados a esta venta.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Sección de Totales y Código QR -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end border-t border-slate-100 pt-6 mb-8">
+            <!-- QR de Verificación Digital -->
+            <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                {% if qr_base64 %}
+                <img src="data:image/png;base64,{{ qr_base64 }}" alt="Código QR Factura"
+                    class="w-20 h-20 border rounded-xl p-1 bg-white shadow-sm flex-shrink-0">
+                {% else %}
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=EcoGreen%20-%20Factura:%20FAC-{{ '%06d'|format(venta.id_venta) }}%20-%20Total:%20${{ venta.total }}"
+                    alt="Código QR Factura"
+                    class="w-20 h-20 border border-slate-200 rounded-xl p-1 bg-white shadow-sm flex-shrink-0">
+                {% endif %}
+                <div>
+                    <p class="text-xs font-bold text-slate-800">Verificación Digital</p>
+                    <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Escanea este QR para validar la autenticidad del comprobante.</p>
+                    <p class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 mt-2 inline-block font-semibold">
+                        CUFE: FAC-{{ "%06d"|format(venta.id_venta) }}-ECO
+                    </p>
+                </div>
+            </div>
+
+            <!-- Desglose Financiero -->
+            <div class="space-y-2 text-right">
+                <div class="flex justify-between items-center text-xs text-slate-500 px-2">
+                    <span>Subtotal:</span>
+                    <span class="font-semibold text-slate-700">${{ "{:,.0f}".format(venta.total|float) }}</span>
+                </div>
+                <div class="flex justify-between items-center text-xs text-slate-500 px-2">
+                    <span>Envío:</span>
+                    <span class="font-bold text-emerald-600">Gratis (EcoShip)</span>
+                </div>
+                <div class="flex justify-between items-center text-xs text-slate-500 px-2">
+                    <span>Impuestos (IVA Incluido):</span>
+                    <span class="font-semibold text-slate-700">$0</span>
+                </div>
+
+                <!-- Total Banner -->
+                <div class="bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-lg shadow-emerald-950/20 flex justify-between items-center mt-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-100">Total Pagado</span>
+                    <span class="text-2xl font-extrabold tracking-tight">${{ "{:,.0f}".format(venta.total|float) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pie de página EcoGreen -->
+        <div class="border-t border-slate-100 pt-6 text-center text-xs text-slate-400 space-y-1.5">
+            <p class="font-semibold text-emerald-800 flex items-center justify-center gap-1.5">
+                <span>🌱</span> ¡Gracias por elegir un futuro más sostenible con EcoGreen!
+            </p>
+            <p>Si tienes alguna consulta sobre tu compra, escríbenos a <a href="mailto:soporte@ecogreen.com" class="text-emerald-600 underline font-medium hover:text-emerald-700">soporte@ecogreen.com</a></p>
+            <p class="text-[10px] text-slate-300">EcoGreen S.A.S. - Documento digital generado automáticamente</p>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

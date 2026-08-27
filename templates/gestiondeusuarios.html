@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body class="bg-[#EEFFDB]">
 
     <header>
         <div class="d-flex align-items-center gap-2 fw-bold" style="font-size: 14px; letter-spacing: 0.08em;">
@@ -27,9 +27,21 @@
 
     <main class="min-h-[calc(100vh-120px)] flex flex-col justify-center items-center p-6">
         
+        <!-- ALERTAS FLASH -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} text-sm py-2 px-4 rounded-xl mb-4 text-center max-w-md w-full shadow-sm" role="alert">
+                        ✨ {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         <section class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 mb-5">
             
-            <form id="register-form" action="/procesar_registro" method="POST" class="{% if error_login %}hidden{% endif %} flex flex-col gap-4">
+            <!-- FORMULARIO DE REGISTRO -->
+            <form id="register-form" action="/procesar_registro" method="POST" class="{% if error_login or error_mode == 'login' %}hidden{% endif %} flex flex-col gap-4">
                 <h2 class="text-2xl font-bold text-center text-gray-800">Crea tu cuenta</h2>
                 
                 {% if error_registro %}
@@ -38,10 +50,10 @@
                 </div>
                 {% endif %}
                 
-                <input type="text" name="nombre" placeholder="Nombre completo" required 
+                <input type="text" name="nombre" placeholder="Nombre completo o usuario" required 
                     class="w-full p-3 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67] transition"> 
                 
-                <input type="email" name="correo" placeholder="Gmail" required 
+                <input type="email" name="correo" placeholder="Correo electrónico (Gmail, etc.)" required 
                     class="w-full p-3 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67] transition">
                 
                 <input type="password" name="password" placeholder="Contraseña" required 
@@ -56,7 +68,8 @@
                 </p>
             </form>
 
-            <form id="login-form" action="/procesar_formulario" method="post" class="{% if not error_login %}hidden{% endif %} flex flex-col gap-4">
+            <!-- FORMULARIO DE INICIO DE SESIÓN -->
+            <form id="login-form" action="/procesar_formulario" method="post" class="{% if not (error_login or error_mode == 'login') %}hidden{% endif %} flex flex-col gap-4">
                 <h2 class="text-2xl font-bold text-center text-gray-800">Bienvenido de nuevo</h2>
                 
                 {% if error_login %}
@@ -65,10 +78,7 @@
                 </div>
                 {% endif %}
                 
-                <input type="text" id="nombre" name="nombre" placeholder="Nombre" required 
-                    class="w-full p-3 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67] transition">
-                
-                <input type="email" id="email" name="email" placeholder="Email" required 
+                <input type="text" id="email" name="email" placeholder="Correo electrónico o Usuario" required 
                     class="w-full p-3 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67] transition">
                 
                 <input type="password" id="contrasena" name="contrasena" placeholder="Contraseña" required 
@@ -79,7 +89,7 @@
                 </button>
                 
                 <div class="text-center mt-2">
-                    <a href="{{ url_for('mostrar_datos') }}" class="text-sm text-gray-600 hover:underline">Mostrar datos registrados</a>
+                    <a href="{{ url_for('cuenta') }}" class="text-sm text-gray-600 hover:underline">Mostrar datos registrados</a>
                 </div>
                 
                 <p class="text-center text-sm text-gray-500 cursor-pointer hover:text-[#4f7d67] transition" onclick="showRegisterForm()">

@@ -5,17 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="EcoGreen" content="Venta de productos biodegradables">
     <title>Mi Cuenta - EcoGreen</title>
+    
+    <!-- Librerías de Estilo y Gráficas -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-light">
+<body class="bg-[#EEFFDB]">
 
+    <!-- BARRA DE NAVEGACIÓN -->
     <header>
         <div class="d-flex align-items-center gap-2 fw-bold" style="font-size: 14px; letter-spacing: 0.08em;">
-            <span><strong>SOURCE VISION GAIN</strong></span>
+            <span>SOURCE VISION GAIN</span>
         </div>
-        <nav>
+        <nav class="flex items-center gap-4 text-sm font-medium text-gray-600 flex-wrap">
             <a href="{{ url_for('home') }}">Inicio</a>
             <a href="{{ url_for('quienes_somos') }}">¿Quiénes somos?</a>
             <a href="{{ url_for('formulario') }}">Gestión de usuarios</a>
@@ -25,93 +29,600 @@
         </nav>
     </header>
 
-    <main class="min-h-[calc(100vh-120px)] flex flex-col justify-center items-center p-6">
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="container my-8 flex-grow">
         
-        <section class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 text-center">
-            
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-success text-sm py-2 px-3 rounded-xl mb-4 text-center animate-pulse" role="alert">
-                            ✨ {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            
-            <div class="mx-auto w-24 h-24 bg-gradient-to-tr from-[#4f7d67] to-green-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-inner mb-4">
-                {{ nombre_usuario[0] | upper if nombre_usuario else 'U' }}
+        <!-- ALERTAS FLASH -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} text-sm py-3 px-4 rounded-xl mb-6 shadow-sm border-0 flex items-center gap-2" role="alert">
+                        <span>✨ {{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- CABECERA DEL PERFIL DE USUARIO -->
+        <section class="mb-8 bg-white p-6 rounded-3xl shadow-xl border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+                <div class="w-20 h-20 bg-gradient-to-tr from-[#4f7d67] to-green-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-md">
+                    {{ nombre_usuario[0] | upper if nombre_usuario else 'U' }}
+                </div>
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-2xl font-extrabold text-gray-800 m-0">{{ nombre_usuario }}</h2>
+                        {% if rol_usuario == 'admin' %}
+                            <span class="bg-purple-100 text-purple-800 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1 shadow-sm">
+                                ⭐ Administrador
+                            </span>
+                        {% else %}
+                            <span class="bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1 shadow-sm">
+                                👤 Cliente / Usuario Standard
+                            </span>
+                        {% endif %}
+                    </div>
+                    <p class="text-gray-500 text-sm m-0 mt-1">📧 {{ correo_usuario }}</p>
+                </div>
             </div>
 
-            <h2 class="text-3xl font-extrabold text-gray-800 mb-1">Tu Perfil</h2>
-            <p class="text-gray-500 text-sm mb-6">Modifica tus datos o cierra tu sesión desde aquí</p>
-
-            <div class="space-y-3 text-left mb-4">
-                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Nombre Activo</span>
-                    <span class="text-gray-800 font-medium text-base">{{ nombre_usuario }}</span>
-                </div>
-                
-                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Correo Vinculado</span>
-                    <span class="text-gray-800 font-medium text-base">{{ correo_usuario }}</span>
-                </div>
-            </div>
-
-            <div class="text-left mb-6 space-y-2">
-                
-                <button class="w-full text-left text-sm font-semibold text-[#4f7d67] hover:underline focus:outline-none py-1" 
-                        type="button" onclick="toggleForm('editNameForm')">
-                    ✏️ Cambiar mi nombre de usuario
+            <!-- ACCIONES DE PERFIL -->
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <button onclick="toggleForm('editNameForm')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold py-2 px-3 rounded-xl transition">
+                    ✏️ Editar Nombre
                 </button>
-                <div id="editNameForm" class="hidden">
-                    <form action="{{ url_for('actualizar_nombre') }}" method="POST" class="mt-2 p-3 bg-gray-50 rounded-xl border flex gap-2">
-                        <input type="text" name="nuevo_nombre" placeholder="Nuevo nombre completo" required
-                               class="w-full p-2 text-sm bg-white border rounded-lg outline-none focus:ring-2 focus:ring-[#4f7d67]">
-                        <button type="submit" class="bg-[#4f7d67] text-white px-3 py-2 rounded-lg text-xs font-bold hover:opacity-90">
-                            Guardar
-                        </button>
-                    </form>
-                </div>
-
-                <button class="w-full text-left text-sm font-semibold text-[#4f7d67] hover:underline focus:outline-none py-1" 
-                        type="button" onclick="toggleForm('editPasswordForm')">
-                    🔒 Modificar mi contraseña actual
+                <button onclick="toggleForm('editPasswordForm')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold py-2 px-3 rounded-xl transition">
+                    🔒 Cambiar Contraseña
                 </button>
-                <div id="editPasswordForm" class="hidden">
-                    <form action="{{ url_for('actualizar_password') }}" method="POST" class="mt-2 p-3 bg-gray-50 rounded-xl border flex gap-2">
-                        <input type="password" name="nueva_password" placeholder="Nueva contraseña segura" required
-                               class="w-full p-2 text-sm bg-white border rounded-lg outline-none focus:ring-2 focus:ring-[#4f7d67]">
-                        <button type="submit" class="bg-[#4f7d67] text-white px-3 py-2 rounded-lg text-xs font-bold hover:opacity-90">
-                            Cambiar
-                        </button>
-                    </form>
-                </div>
-
+                <a href="{{ url_for('logout') }}" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2 px-4 rounded-xl no-underline transition shadow-sm">
+                    🚪 Cerrar Sesión
+                </a>
             </div>
-
-            <hr class="border-gray-200 my-4">
-
-            <a href="{{ url_for('logout') }}" 
-               class="w-full inline-block bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all transform active:scale-95 no-underline">
-                Cerrar Sesión
-            </a>
-
         </section>
 
+        <!-- FORMULARIOS DESPLEGABLES DE EDICIÓN -->
+        <div id="editNameForm" class="hidden mb-6 bg-white p-4 rounded-2xl shadow-md border border-gray-100 max-w-md">
+            <h4 class="text-sm font-bold text-gray-800 mb-2">Cambiar nombre de usuario</h4>
+            <form action="{{ url_for('actualizar_nombre') }}" method="POST" class="flex gap-2">
+                <input type="text" name="nuevo_nombre" placeholder="Nuevo nombre completo" required
+                       class="w-full p-2 text-xs bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67]">
+                <button type="submit" class="bg-[#4f7d67] text-white px-4 py-2 rounded-xl text-xs font-bold hover:opacity-90">
+                    Guardar
+                </button>
+            </form>
+        </div>
+
+        <div id="editPasswordForm" class="hidden mb-6 bg-white p-4 rounded-2xl shadow-md border border-gray-100 max-w-md">
+            <h4 class="text-sm font-bold text-gray-800 mb-2">Cambiar contraseña</h4>
+            <form action="{{ url_for('actualizar_password') }}" method="POST" class="flex gap-2">
+                <input type="password" name="nueva_password" placeholder="Nueva contraseña" required
+                       class="w-full p-2 text-xs bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67]">
+                <button type="submit" class="bg-[#4f7d67] text-white px-4 py-2 rounded-xl text-xs font-bold hover:opacity-90">
+                    Cambiar
+                </button>
+            </form>
+        </div>
+
+        {% if rol_usuario == 'admin' %}
+        <!-- ======================================================== -->
+        <!-- PESTAÑAS EXCLUSIVAS DE ADMINISTRADOR                     -->
+        <!-- ======================================================== -->
+        
+        <div class="mb-6 flex border-b border-gray-200 gap-2 flex-wrap">
+            <button onclick="showAdminTab('tab-productos')" id="btn-tab-productos" class="admin-tab-btn px-4 py-2.5 font-bold text-sm rounded-t-2xl bg-[#4f7d67] text-white shadow-sm">
+                📦 Productos & Stock
+            </button>
+            <button onclick="showAdminTab('tab-usuarios')" id="btn-tab-usuarios" class="admin-tab-btn px-4 py-2.5 font-bold text-sm rounded-t-2xl bg-white text-gray-600 hover:text-green-800">
+                👥 Gestión de Usuarios
+            </button>
+            <button onclick="showAdminTab('tab-ventas')" id="btn-tab-ventas" class="admin-tab-btn px-4 py-2.5 font-bold text-sm rounded-t-2xl bg-white text-gray-600 hover:text-green-800">
+                🧾 Facturas & Ventas Globales
+            </button>
+            <button onclick="showAdminTab('tab-metricas')" id="btn-tab-metricas" class="admin-tab-btn px-4 py-2.5 font-bold text-sm rounded-t-2xl bg-white text-gray-600 hover:text-green-800">
+                📊 Métricas de Ventas
+            </button>
+            <button onclick="showAdminTab('tab-miscompras')" id="btn-tab-miscompras" class="admin-tab-btn px-4 py-2.5 font-bold text-sm rounded-t-2xl bg-white text-gray-600 hover:text-green-800">
+                🛒 Mis Compras Personales
+            </button>
+        </div>
+
+        <!-- TAB 1: GESTIÓN DE PRODUCTOS -->
+        <section id="tab-productos" class="admin-tab-content bg-white p-6 rounded-b-3xl rounded-tr-3xl shadow-xl border border-gray-100">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 m-0">📦 Catálogo de Productos y Rendimiento</h3>
+                    <p class="text-xs text-gray-500 m-0 mt-1">Agrega, edita el precio, modifica el stock o elimina productos de la tienda.</p>
+                </div>
+                <button onclick="toggleForm('formAgregarProducto')" class="bg-[#4f7d67] hover:bg-[#3d6352] text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-md transition flex items-center gap-2">
+                    <span>➕</span> Agregar Producto
+                </button>
+            </div>
+
+            <!-- FORMULARIO AGREGAR PRODUCTO -->
+            <div id="formAgregarProducto" class="hidden mb-6 p-5 bg-gray-50 rounded-2xl border border-gray-200">
+                <h4 class="text-base font-bold text-gray-800 mb-4">Crear Nuevo Producto para la Venta</h4>
+                <form action="/admin/producto/crear" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nombre del Producto</label>
+                        <input type="text" name="nombre_prod" placeholder="Ej: Bolsa Biodegradable Mini" required
+                               class="w-full p-2.5 text-xs bg-white border rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Precio ($ COP)</label>
+                        <input type="number" name="precio" placeholder="Ej: 25000" required
+                               class="w-full p-2.5 text-xs bg-white border rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Stock Disponible</label>
+                        <input type="number" name="stock" value="100" required
+                               class="w-full p-2.5 text-xs bg-white border rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67]">
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Descripción</label>
+                        <input type="text" name="descripcion" placeholder="Descripción corta del producto"
+                               class="w-full p-2.5 text-xs bg-white border rounded-xl outline-none focus:ring-2 focus:ring-[#4f7d67]">
+                    </div>
+                    <div class="md:col-span-3 flex justify-end gap-2">
+                        <button type="button" onclick="toggleForm('formAgregarProducto')" class="px-4 py-2 bg-gray-300 text-gray-700 text-xs font-bold rounded-xl">Cancelar</button>
+                        <button type="submit" class="px-5 py-2 bg-[#4f7d67] text-white text-xs font-bold rounded-xl hover:opacity-90 shadow-md">Guardar Producto</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TABLA DE PRODUCTOS Y VENTAS -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-gray-600 border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 font-bold uppercase tracking-wider border-b">
+                            <th class="p-3">ID</th>
+                            <th class="p-3">Nombre del Producto</th>
+                            <th class="p-3">Precio ($)</th>
+                            <th class="p-3">Stock</th>
+                            <th class="p-3">Unidades Vendidas</th>
+                            <th class="p-3">Recaudo ($)</th>
+                            <th class="p-3 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for prod in lista_productos %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="p-3 font-bold text-gray-800">#{{ prod.id_producto }}</td>
+                            <td class="p-3 font-semibold text-gray-800">{{ prod.nombre_prod }}</td>
+                            <td class="p-3 font-bold text-emerald-700">${{ "{:,.0f}".format(prod.precio) }}</td>
+                            <td class="p-3">
+                                <span class="px-2.5 py-1 rounded-full font-bold text-[11px] {% if prod.stock > 10 %} bg-green-100 text-green-800 {% else %} bg-red-100 text-red-800 {% endif %}">
+                                    {{ prod.stock }} unidades
+                                </span>
+                            </td>
+                            <td class="p-3 font-bold text-gray-700">{{ prod.total_vendidos }} u.</td>
+                            <td class="p-3 font-bold text-green-800">${{ "{:,.0f}".format(prod.recaudo_producto) }}</td>
+                            <td class="p-3 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <!-- Botón Mostrar Edición -->
+                                    <button onclick="toggleForm('edit-prod-{{ prod.id_producto }}')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-2.5 py-1 rounded-lg transition text-[11px]">
+                                        ✏️ Editar
+                                    </button>
+                                    <!-- Formulario Eliminar -->
+                                    <form action="/admin/producto/eliminar" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar el producto {{ prod.nombre_prod }}?');" class="m-0">
+                                        <input type="hidden" name="id_producto" value="{{ prod.id_producto }}">
+                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold px-2.5 py-1 rounded-lg transition text-[11px]">
+                                            🗑️ Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- FILA EDICIÓN DESPLEGABLE -->
+                        <tr id="edit-prod-{{ prod.id_producto }}" class="hidden bg-blue-50">
+                            <td colspan="7" class="p-4">
+                                <form action="/admin/producto/editar" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                    <input type="hidden" name="id_producto" value="{{ prod.id_producto }}">
+                                    <div>
+                                        <label class="block text-[10px] font-bold uppercase text-gray-500">Nombre</label>
+                                        <input type="text" name="nombre_prod" value="{{ prod.nombre_prod }}" required class="w-full p-2 text-xs border rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold uppercase text-gray-500">Precio ($)</label>
+                                        <input type="number" name="precio" value="{{ "{:.0f}".format(prod.precio) }}" required class="w-full p-2 text-xs border rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold uppercase text-gray-500">Stock</label>
+                                        <input type="number" name="stock" value="{{ prod.stock }}" required class="w-full p-2 text-xs border rounded-lg">
+                                    </div>
+                                    <div class="flex items-end gap-2">
+                                        <button type="submit" class="bg-green-600 text-white text-xs font-bold py-2 px-3 rounded-lg hover:bg-green-700">Guardar Cambios</button>
+                                        <button type="button" onclick="toggleForm('edit-prod-{{ prod.id_producto }}')" class="bg-gray-400 text-white text-xs font-bold py-2 px-3 rounded-lg">Cancelar</button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- TAB 2: GESTIÓN DE USUARIOS -->
+        <section id="tab-usuarios" class="admin-tab-content hidden bg-white p-6 rounded-b-3xl rounded-tr-3xl shadow-xl border border-gray-100">
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-gray-800 m-0">👥 Todos los Usuarios en la Base de Datos</h3>
+                <p class="text-xs text-gray-500 m-0 mt-1">Consulta los datos registrados (Nombre, Gmail, Contraseña), cambia roles o banea usuarios.</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-gray-600 border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 font-bold uppercase tracking-wider border-b">
+                            <th class="p-3">ID</th>
+                            <th class="p-3">Nombre</th>
+                            <th class="p-3">Correo Electrónico (Gmail)</th>
+                            <th class="p-3">Contraseña (Texto plano / Hash)</th>
+                            <th class="p-3">Rol</th>
+                            <th class="p-3">Estado</th>
+                            <th class="p-3 text-center">Acciones de Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for user_row in todos_los_usuarios %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="p-3 font-bold text-gray-800">#{{ user_row.id_usuario }}</td>
+                            <td class="p-3 font-bold text-gray-800">{{ user_row.nombre }}</td>
+                            <td class="p-3 font-semibold text-blue-700">{{ user_row.correo }}</td>
+                            <td class="p-3 font-mono text-gray-600 max-w-[200px] truncate" title="{{ user_row.password }}">
+                                🔑 {{ user_row.password }}
+                            </td>
+                            <td class="p-3">
+                                <form action="/admin/usuario/rol" method="POST" class="m-0 flex items-center gap-1">
+                                    <input type="hidden" name="id_usuario" value="{{ user_row.id_usuario }}">
+                                    <select name="nuevo_rol" onchange="this.form.submit()" class="text-xs font-bold p-1 border rounded-lg {% if user_row.rol == 'admin' %} bg-purple-100 text-purple-800 {% else %} bg-blue-50 text-blue-800 {% endif %}">
+                                        <option value="cliente" {% if user_row.rol == 'cliente' %}selected{% endif %}>cliente</option>
+                                        <option value="admin" {% if user_row.rol == 'admin' %}selected{% endif %}>admin</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td class="p-3">
+                                <span class="px-2.5 py-1 rounded-full font-bold text-[11px] {% if user_row.estado == 'activo' %} bg-green-100 text-green-800 {% else %} bg-red-100 text-red-800 {% endif %}">
+                                    {{ user_row.estado | upper }}
+                                </span>
+                            </td>
+                            <td class="p-3 text-center">
+                                <form action="/admin/usuario/estado" method="POST" class="m-0">
+                                    <input type="hidden" name="id_usuario" value="{{ user_row.id_usuario }}">
+                                    {% if user_row.estado == 'activo' %}
+                                        <input type="hidden" name="nuevo_estado" value="baneado">
+                                        <button type="submit" onclick="return confirm('¿Seguro que deseas BANEAR al usuario {{ user_row.nombre }}?');" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1 rounded-lg text-xs transition">
+                                            🚫 Banear
+                                        </button>
+                                    {% else %}
+                                        <input type="hidden" name="nuevo_estado" value="activo">
+                                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 rounded-lg text-xs transition">
+                                            ✅ Activar
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- TAB 3: VENTAS, MÉTODOS DE PAGO Y RASTREO GLOBALES -->
+        <section id="tab-ventas" class="admin-tab-content hidden bg-white p-6 rounded-b-3xl rounded-tr-3xl shadow-xl border border-gray-100">
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-gray-800 m-0">🧾 Ventas, Pagos & Envíos Registrados</h3>
+                <p class="text-xs text-gray-500 m-0 mt-1">Consulta los datos de pago (Tarjeta, Nequi) y actualiza la guía y estado de cada envío.</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-gray-600 border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 font-bold uppercase tracking-wider border-b">
+                            <th class="p-3">Factura #</th>
+                            <th class="p-3">Cliente</th>
+                            <th class="p-3">Ciudad / Dirección</th>
+                            <th class="p-3">Método & Detalle Pago</th>
+                            <th class="p-3">Estado Envío & Guía</th>
+                            <th class="p-3">Total ($)</th>
+                            <th class="p-3 text-center">Acciones Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for venta in lista_ventas_globales %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="p-3 font-bold text-gray-800">#{{ venta.id_venta }}</td>
+                            <td class="p-3">
+                                <div class="font-bold text-gray-800">{{ venta.nombre_cliente }}</div>
+                                <div class="text-[11px] text-blue-700 font-semibold">{{ venta.correo_cliente }}</div>
+                                <div class="text-[10px] text-gray-400">📞 {{ venta.telefono_contacto }}</div>
+                            </td>
+                            <td class="p-3 max-w-[180px]">
+                                <div class="font-semibold text-gray-700">{{ venta.ciudad }}</div>
+                                <div class="text-[11px] text-gray-500 truncate" title="{{ venta.direccion_envio }}">{{ venta.direccion_envio }}</div>
+                            </td>
+                            <td class="p-3">
+                                <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-bold block w-max mb-1">
+                                    {{ venta.metodo_pago }}
+                                </span>
+                                <span class="font-mono text-[10px] text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded border block truncate max-w-[180px]" title="{{ venta.detalles_pago }}">
+                                    💳 {{ venta.detalles_pago }}
+                                </span>
+                            </td>
+                            <td class="p-3">
+                                <span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] block w-max mb-1
+                                    {% if venta.estado_envio == 'Entregado' %} bg-green-100 text-green-800
+                                    {% elif venta.estado_envio == 'En camino' %} bg-blue-100 text-blue-800
+                                    {% else %} bg-yellow-100 text-yellow-800 {% endif %}">
+                                    🚚 {{ venta.estado_envio }}
+                                </span>
+                                <div class="text-[10px] text-gray-500 font-mono">
+                                    Guía: <strong class="text-gray-700">{{ venta.numero_guia }}</strong>
+                                </div>
+                                <div class="text-[9px] text-gray-400">({{ venta.empresa_transporte }})</div>
+                            </td>
+                            <td class="p-3 font-extrabold text-emerald-700">${{ "{:,.0f}".format(venta.total) }}</td>
+                            <td class="p-3 text-center">
+                                <div class="flex flex-col gap-1.5 items-center">
+                                    <a href="{{ url_for('ver_factura', id_venta=venta.id_venta) }}" target="_blank"
+                                       class="bg-[#4f7d67] hover:bg-emerald-800 text-white font-bold py-1 px-2.5 rounded-lg no-underline text-[11px] shadow-sm w-full">
+                                        🧾 Factura
+                                    </a>
+                                    <button onclick="toggleForm('edit-seg-{{ venta.id_venta }}')"
+                                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2.5 rounded-lg text-[11px] shadow-sm w-full">
+                                        ✏️ Gestionar Envío
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- FORMULARIO INLINE DESPLEGABLE DE EDICIÓN DE SEGUIMIENTO -->
+                        <tr id="edit-seg-{{ venta.id_venta }}" class="hidden bg-blue-50">
+                            <td colspan="7" class="p-4">
+                                <form action="/admin/seguimiento/actualizar" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-white p-3 rounded-xl border border-blue-200">
+                                    <input type="hidden" name="id_venta" value="{{ venta.id_venta }}">
+                                    <div>
+                                        <label class="block text-[10px] font-bold uppercase text-gray-500">Estado del Envío</label>
+                                        <select name="estado_envio" class="w-full p-2 text-xs border rounded-lg font-bold bg-gray-50">
+                                            <option value="Preparando pedido" {% if venta.estado_envio == 'Preparando pedido' %}selected{% endif %}>📦 Preparando pedido</option>
+                                            <option value="En camino" {% if venta.estado_envio == 'En camino' %}selected{% endif %}>🚚 En camino</option>
+                                            <option value="Entregado" {% if venta.estado_envio == 'Entregado' %}selected{% endif %}>✅ Entregado</option>
+                                            <option value="Cancelado" {% if venta.estado_envio == 'Cancelado' %}selected{% endif %}>❌ Cancelado</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold uppercase text-gray-500">Número de Guía</label>
+                                        <input type="text" name="numero_guia" value="{{ venta.numero_guia }}" required class="w-full p-2 text-xs border rounded-lg font-mono">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold uppercase text-gray-500">Empresa de Transporte</label>
+                                        <input type="text" name="empresa_transporte" value="{{ venta.empresa_transporte }}" required class="w-full p-2 text-xs border rounded-lg">
+                                    </div>
+                                    <div class="flex items-end gap-2">
+                                        <button type="submit" class="bg-green-600 text-white text-xs font-bold py-2 px-3 rounded-lg hover:bg-green-700 shadow">Guardar Estado</button>
+                                        <button type="button" onclick="toggleForm('edit-seg-{{ venta.id_venta }}')" class="bg-gray-400 text-white text-xs font-bold py-2 px-3 rounded-lg">Cancelar</button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- TAB 4: MÉTRICAS Y GRÁFICAS GLOBALES -->
+        <section id="tab-metricas" class="admin-tab-content hidden bg-white p-6 rounded-b-3xl rounded-tr-3xl shadow-xl border border-gray-100">
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-gray-800 m-0">📊 Métricas Globales de Rendimiento</h3>
+                <p class="text-xs text-gray-500 m-0 mt-1">Estadísticas globales de ventas y productos más populares.</p>
+            </div>
+
+            <!-- TARJETAS KPI -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-gradient-to-br from-emerald-500 to-green-600 text-white p-5 rounded-2xl shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-green-100 font-semibold uppercase tracking-wider mb-1">Total Recaudado</p>
+                        <p class="text-2xl font-black mb-0">${{ "{:,.0f}".format(total_recaudado) }} COP</p>
+                    </div>
+                    <div class="text-3xl bg-white/20 p-3 rounded-xl">💰</div>
+                </div>
+
+                <div class="bg-gradient-to-br from-slate-700 to-slate-900 text-white p-5 rounded-2xl shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-300 font-semibold uppercase tracking-wider mb-1">Ventas Totales</p>
+                        <p class="text-2xl font-black mb-0">{{ ventas_totales_cant }} pedido(s)</p>
+                    </div>
+                    <div class="text-3xl bg-white/20 p-3 rounded-xl">🛒</div>
+                </div>
+
+                <div class="bg-gradient-to-br from-teal-500 to-emerald-700 text-white p-5 rounded-2xl shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-teal-100 font-semibold uppercase tracking-wider mb-1">Productos Vendidos</p>
+                        <p class="text-2xl font-black mb-0">{{ total_unidades_vendidas }} unidad(es)</p>
+                    </div>
+                    <div class="text-3xl bg-white/20 p-3 rounded-xl">📦</div>
+                </div>
+            </div>
+
+            <!-- GRÁFICAS CHART.JS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex flex-col justify-between">
+                    <h4 class="text-sm font-bold text-gray-700 mb-4 text-center">Top Productos Más Vendidos</h4>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chartProductos"></canvas>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex flex-col justify-between">
+                    <h4 class="text-sm font-bold text-gray-700 mb-4 text-center">Comparativa Recaudo vs Unidades</h4>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chartFinanciero"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: COMPRAS PERSONALES DE ADMIN -->
+        <section id="tab-miscompras" class="admin-tab-content hidden bg-white p-6 rounded-b-3xl rounded-tr-3xl shadow-xl border border-gray-100">
+            {% include 'compras_snippet.html' ignore missing %}
+        </section>
+
+        {% else %}
+        <!-- ======================================================== -->
+        <!-- VISTA DE USUARIO NORMAL (CLIENTE)                        -->
+        <!-- ======================================================== -->
+        
+        <section class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 m-0">📦 Mis Compras Realizadas</h3>
+                    <p class="text-xs text-gray-500 m-0 mt-1">Historial de pedidos realizados con tu cuenta personal</p>
+                </div>
+                <span class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                    {{ compras|length }} pedido(s)
+                </span>
+            </div>
+
+            {% if compras %}
+                <div class="space-y-4">
+                    {% for compra in compras %}
+                        <div class="border border-gray-100 rounded-2xl p-4 bg-gray-50 hover:bg-white hover:shadow-md transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="font-bold text-gray-800 text-sm">Pedido #{{ compra.id_venta }}</span>
+                                    {% if compra.fecha_venta %}
+                                        <span class="text-[10px] text-gray-400">({{ compra.fecha_venta }})</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-xs text-gray-600 space-y-1">
+                                    <p class="m-0"><strong>Total:</strong> ${{ "{:,.0f}".format(compra.total) }} COP</p>
+                                    <p class="m-0"><strong>Detalle Pago:</strong> 
+                                        <span class="font-mono bg-white px-1.5 py-0.5 rounded border text-[11px] text-gray-700">{{ compra.detalles_pago }}</span>
+                                    </p>
+                                    <p class="m-0"><strong>Estado Pago:</strong> 
+                                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full 
+                                            {% if compra.estado_pago == 'Aprobado' %} bg-green-100 text-green-700 
+                                            {% else %} bg-yellow-100 text-yellow-700 {% endif %}">
+                                            {{ compra.estado_pago }}
+                                        </span>
+                                    </p>
+                                    <p class="m-0"><strong>Estado Envío:</strong> 
+                                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full
+                                            {% if compra.estado_envio == 'Entregado' %} bg-green-100 text-green-800
+                                            {% elif compra.estado_envio == 'En camino' %} bg-blue-100 text-blue-800
+                                            {% else %} bg-yellow-100 text-yellow-800 {% endif %}">
+                                            🚚 {{ compra.estado_envio }}
+                                        </span>
+                                        {% if compra.numero_guia and compra.numero_guia != 'N/A' %}
+                                            <span class="text-xs font-mono text-gray-500 ml-1">(Guía: {{ compra.numero_guia }})</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-row md:flex-col gap-2 w-full md:w-auto">
+                                <a href="{{ url_for('seguimiento', guia=compra.numero_guia) }}"
+                                   class="text-center text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-lg shadow-sm transition-all no-underline">
+                                    🚚 Rastrear Envío
+                                </a>
+                                <a href="{{ url_for('ver_factura', id_venta=compra.id_venta) }}" target="_blank"
+                                   class="text-center text-xs bg-[#4f7d67] hover:bg-emerald-800 text-white font-bold py-2 px-3 rounded-lg shadow-sm transition-all no-underline">
+                                    🧾 Ver Factura
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-12 border-2 border-dashed border-gray-200 rounded-2xl">
+                    <p class="text-4xl mb-2">🛒</p>
+                    <h4 class="text-gray-700 font-bold text-base mb-1">Aún no has realizado compras</h4>
+                    <p class="text-gray-400 text-xs mb-4">Realiza un pedido desde la sección de Ventas para ver el detalle aquí.</p>
+                    <a href="{{ url_for('ventas') }}" class="bg-[#4f7d67] text-white text-xs font-bold py-2 px-4 rounded-xl no-underline hover:opacity-90">
+                        Ir a la Tienda
+                    </a>
+                </div>
+            {% endif %}
+        </section>
+        {% endif %}
     </main>
 
-    <footer>
-        <p class="m-0">Derechos de autor © 2024 EcoGreen. Todos los derechos reservados.</p>
+    <!-- FOOTER -->
+    <footer class="bg-white border-t py-4 text-center text-xs text-gray-500 mt-12">
+        <p class="m-0">Derechos de autor © 2026 EcoGreen. Todos los derechos reservados.</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- SCRIPTS PARA DESPLEGABLES Y PESTAÑAS ADMIN -->
     <script>
         function toggleForm(formId) {
             const form = document.getElementById(formId);
-            form.classList.toggle('hidden'); 
+            if (form) form.classList.toggle('hidden'); 
         }
+
+        function showAdminTab(tabId) {
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-[#4f7d67]', 'text-white', 'shadow-sm');
+                btn.classList.add('bg-white', 'text-gray-600');
+            });
+
+            const activeContent = document.getElementById(tabId);
+            if (activeContent) activeContent.classList.remove('hidden');
+
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-gray-600');
+                activeBtn.classList.add('bg-[#4f7d67]', 'text-white', 'shadow-sm');
+            }
+        }
+
+        {% if rol_usuario == 'admin' %}
+        document.addEventListener("DOMContentLoaded", function () {
+            const nombresProds = {{ nombres_productos | safe }};
+            const cantidadesProds = {{ cantidades_productos | safe }};
+            const totalRecaudado = {{ total_recaudado }};
+            const totalVentas = {{ ventas_totales_cant }};
+
+            const elemProd = document.getElementById('chartProductos');
+            if (elemProd) {
+                const ctxProd = elemProd.getContext('2d');
+                new Chart(ctxProd, {
+                    type: 'doughnut',
+                    data: {
+                        labels: nombresProds.length > 0 ? nombresProds : ['Sin ventas aún'],
+                        datasets: [{
+                            label: 'Unidades Vendidas',
+                            data: cantidadesProds.length > 0 ? cantidadesProds : [0],
+                            backgroundColor: ['#10b981', '#059669', '#047857', '#34d399', '#a7f3d0'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+
+            const elemFin = document.getElementById('chartFinanciero');
+            if (elemFin) {
+                const ctxFin = elemFin.getContext('2d');
+                new Chart(ctxFin, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Pedidos Totales', 'Recaudo ($ COP en miles)'],
+                        datasets: [{
+                            label: 'Rendimiento',
+                            data: [totalVentas, totalRecaudado / 1000], 
+                            backgroundColor: ['#334155', '#10b981'],
+                            borderRadius: 8
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                });
+            }
+        });
+        {% endif %}
     </script>
 </body>
 </html>
