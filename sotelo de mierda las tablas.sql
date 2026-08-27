@@ -1,12 +1,17 @@
 -- ==============================================================================
--- BASE DE DATOS DEL PROYECTO (COMPATIBLE CON LOCAL Y AIVEN CLOUD)
+-- SCRIPT DE MIGRACIÓN COMPLETA PARA AIVEN CLOUD (MySQL)
 -- Proyecto: EcoGreen / Formulario
+-- Descripción: Creación de tablas con claves primarias, autoincrementables, 
+--              claves foráneas e inserción ordenada de datos existentes.
+-- Compatible con Aiven Cloud (Sin errores de DEFINER ni conflictos de FK).
 -- ==============================================================================
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Tablas
+-- -----------------------------------------------------------------------------
+-- 1. LIMPIEZA DE TABLAS Y VISTAS PREVIAS
+-- -----------------------------------------------------------------------------
 DROP VIEW IF EXISTS vista_reporte_ventas;
 DROP VIEW IF EXISTS vista_productos_stock_bajo;
 DROP VIEW IF EXISTS vista_usuarios_publico;
@@ -22,6 +27,11 @@ DROP TABLE IF EXISTS productos;
 DROP TABLE IF EXISTS metodos_pago;
 DROP TABLE IF EXISTS usuarios;
 
+-- -----------------------------------------------------------------------------
+-- 2. CREACIÓN DE TABLAS CON CLAVES (PK / FK / UNIQUE / AUTO_INCREMENT)
+-- -----------------------------------------------------------------------------
+
+-- TABLA: usuarios
 CREATE TABLE usuarios (
   id_usuario INT NOT NULL AUTO_INCREMENT,
   nombre VARCHAR(100) NOT NULL,
@@ -34,6 +44,7 @@ CREATE TABLE usuarios (
   UNIQUE KEY uq_usuarios_correo (correo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- TABLA: metodos_pago
 CREATE TABLE metodos_pago (
   id_metodo_pago INT NOT NULL AUTO_INCREMENT,
   nombre_metodo VARCHAR(50) NOT NULL,
@@ -42,6 +53,7 @@ CREATE TABLE metodos_pago (
   UNIQUE KEY uq_metodos_pago_nombre (nombre_metodo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- TABLA: productos
 CREATE TABLE productos (
   id_producto INT NOT NULL AUTO_INCREMENT,
   nombre_prod VARCHAR(150) NOT NULL,
@@ -51,6 +63,7 @@ CREATE TABLE productos (
   PRIMARY KEY (id_producto)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- TABLA: ventas
 CREATE TABLE ventas (
   id_venta INT NOT NULL AUTO_INCREMENT,
   id_usuario INT DEFAULT NULL,
@@ -71,6 +84,7 @@ CREATE TABLE ventas (
   CONSTRAINT fk_ventas_metodo_pago FOREIGN KEY (id_metodo_pago) REFERENCES metodos_pago (id_metodo_pago) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- TABLA: detalle_ventas
 CREATE TABLE detalle_ventas (
   id_detalle INT NOT NULL AUTO_INCREMENT,
   id_venta INT DEFAULT NULL,
@@ -84,6 +98,7 @@ CREATE TABLE detalle_ventas (
   CONSTRAINT fk_detalle_ventas_producto FOREIGN KEY (id_producto) REFERENCES productos (id_producto) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- TABLA: seguimiento
 CREATE TABLE seguimiento (
   id_seguimiento INT NOT NULL AUTO_INCREMENT,
   id_venta INT DEFAULT NULL,
@@ -97,6 +112,7 @@ CREATE TABLE seguimiento (
   CONSTRAINT fk_seguimiento_venta FOREIGN KEY (id_venta) REFERENCES ventas (id_venta) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- TABLA: carrito
 CREATE TABLE carrito (
   id_carrito INT NOT NULL AUTO_INCREMENT,
   id_usuario INT DEFAULT NULL,
@@ -109,6 +125,7 @@ CREATE TABLE carrito (
   CONSTRAINT fk_carrito_producto FOREIGN KEY (id_producto) REFERENCES productos (id_producto) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- TABLA: contactanos
 CREATE TABLE contactanos (
   id_contactanos INT NOT NULL AUTO_INCREMENT,
   contacto VARCHAR(100) NOT NULL,
@@ -119,6 +136,7 @@ CREATE TABLE contactanos (
   PRIMARY KEY (id_contactanos)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- TABLA: facturas
 CREATE TABLE facturas (
   id_factura INT NOT NULL AUTO_INCREMENT,
   id_venta INT DEFAULT NULL,
@@ -131,6 +149,7 @@ CREATE TABLE facturas (
   CONSTRAINT fk_facturas_venta FOREIGN KEY (id_venta) REFERENCES ventas (id_venta) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- TABLA: devoluciones
 CREATE TABLE devoluciones (
   id_devolucion INT NOT NULL AUTO_INCREMENT,
   id_venta INT DEFAULT NULL,
@@ -142,7 +161,11 @@ CREATE TABLE devoluciones (
   CONSTRAINT fk_devoluciones_venta FOREIGN KEY (id_venta) REFERENCES ventas (id_venta) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Datos iniciales
+-- -----------------------------------------------------------------------------
+-- 3. INSERCIÓN DE DATOS EXISTENTES
+-- -----------------------------------------------------------------------------
+
+-- 3.1 Usuarios
 INSERT INTO usuarios (id_usuario, nombre, correo, password, rol, fecha_registro, estado) VALUES
 (1, 'Cristian', 'cristiansotelo.0.0m2@gmail.com', 'scrypt:32768:8:1$4D4sjKJxApz4hufH$8d139a2655efb0820f080c706c6a0dd155352616791694b1c4b60a7dae5561a9188281ad9592575a20476c7d96cc025815c048f0b20db2b92f1ecd1b242910b6', 'admin', '2026-07-30 16:10:44', 'activo'),
 (2, 'Cris', 'Crisajj@gmail.com', '1234567890', 'cliente', '2026-08-03 15:13:55', 'activo'),
@@ -157,6 +180,7 @@ INSERT INTO usuarios (id_usuario, nombre, correo, password, rol, fecha_registro,
 (12, 'hsajjswka', 'dashjdhajsd@gmail.com', 'ad1762178932', 'cliente', '2026-08-13 15:09:04', 'activo'),
 (13, 'kjhgfghjk', 'kjhghjq@gmail.com', 'wdsada', 'cliente', '2026-08-13 15:13:12', 'activo');
 
+-- 3.2 Métodos de Pago
 INSERT INTO metodos_pago (id_metodo_pago, nombre_metodo, descripcion) VALUES
 (1, 'nequi', 'Transfiere desde tu cuenta Nequi'),
 (2, 'daviplata', 'Transfiere desde tu cuenta Daviplata'),
@@ -167,6 +191,7 @@ INSERT INTO metodos_pago (id_metodo_pago, nombre_metodo, descripcion) VALUES
 (7, 'Tarjeta de Crédito', 'Pago usando Tarjeta de Crédito'),
 (8, 'Tarjeta de Crédito / Débito', 'Pago usando Tarjeta de Crédito / Débito');
 
+-- 3.3 Productos
 INSERT INTO productos (id_producto, nombre_prod, descripcion, precio, stock) VALUES
 (1, 'Kit Cepillo Bambú', 'Kit ecológico con 4 cepillos de dientes hechos de bambú', 15000.00, 50),
 (2, 'Termo Acero Inoxidable', 'Termo de 500ml para agua fría o caliente', 32000.00, 30),
@@ -174,6 +199,7 @@ INSERT INTO productos (id_producto, nombre_prod, descripcion, precio, stock) VAL
 (5, 'Plato BowlTapa', NULL, 20000.00, 80),
 (6, 'Plato 3 Divisiones', '', 30000.00, 89);
 
+-- 3.4 Ventas
 INSERT INTO ventas (id_venta, id_usuario, id_metodo_pago, fecha_venta, total, estado_pago, nombre_cliente, telefono_contacto, direccion_envio, ciudad, departamento, detalles_pago) VALUES
 (1, 1, 5, '2026-07-30 16:11:46', 85000.00, 'Aprobado', 'chris', '313234566', 'calle 8 sur 8a -24g', 'bogota', 'Cundinamarca', 'Sin detalle'),
 (2, 1, 6, '2026-07-30 16:24:45', 20000.00, 'Aprobado', 'Cristian Sotelo', '123456', 'calle 8 sur 8a -24g', 'bogota', 'Cundinamarca', 'Sin detalle'),
@@ -190,6 +216,7 @@ INSERT INTO ventas (id_venta, id_usuario, id_metodo_pago, fecha_venta, total, es
 (13, 13, 6, '2026-08-13 15:13:42', 90000.00, 'Aprobado', 'cesar', '09876543212', 'calle 8 sur 8a -24g', 'bogota', 'Cundinamarca', 'Sin detalle'),
 (14, 1, 8, '2026-08-20 13:34:15', 115000.00, 'Aprobado', 'Cristian Sotelo', '123456', 'Calle 6h 09', 'cundinamarca', 'Cundinamarca', 'Tarjeta **** **** **** 7654 (JUAN)');
 
+-- 3.5 Detalle Ventas
 INSERT INTO detalle_ventas (id_detalle, id_venta, id_producto, cantidad, precio_unitario) VALUES
 (1, 1, 4, 1, 45000.00),
 (2, 1, 5, 2, 20000.00),
@@ -222,6 +249,7 @@ INSERT INTO detalle_ventas (id_detalle, id_venta, id_producto, cantidad, precio_
 (29, 14, 4, 1, 45000.00),
 (30, 14, 6, 1, 30000.00);
 
+-- 3.6 Seguimiento
 INSERT INTO seguimiento (id_seguimiento, id_venta, estado_envio, numero_guia, empresa_transporte, ultima_actualizacion, fecha_actualizacion) VALUES
 (1, 1, 'Preparando pedido', 'N/A', 'Coordinadora', '2026-07-30 16:11:46', '2026-08-20 13:41:05'),
 (2, 2, 'Preparando pedido', 'N/A', 'Coordinadora', '2026-07-30 16:24:45', '2026-08-20 13:41:05'),
@@ -238,6 +266,9 @@ INSERT INTO seguimiento (id_seguimiento, id_venta, estado_envio, numero_guia, em
 (13, 13, 'Preparando pedido', 'N/A', 'Coordinadora', '2026-08-13 15:13:42', '2026-08-20 13:41:05'),
 (14, 14, 'Preparando pedido', 'EG-000014', 'Coordinadora', '2026-08-20 15:46:46', '2026-08-20 15:46:46');
 
+-- -----------------------------------------------------------------------------
+-- 4. AJUSTE DE CONTADORES AUTO_INCREMENT
+-- -----------------------------------------------------------------------------
 ALTER TABLE usuarios AUTO_INCREMENT = 14;
 ALTER TABLE metodos_pago AUTO_INCREMENT = 9;
 ALTER TABLE productos AUTO_INCREMENT = 8;
@@ -249,9 +280,15 @@ ALTER TABLE contactanos AUTO_INCREMENT = 1;
 ALTER TABLE facturas AUTO_INCREMENT = 1;
 ALTER TABLE devoluciones AUTO_INCREMENT = 1;
 
--- Vistas
+-- -----------------------------------------------------------------------------
+-- 5. CREACIÓN DE VISTAS (COMPATIBLES CON AIVEN / SIN DEFINER)
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW vista_productos_stock_bajo AS
-SELECT id_producto, nombre_prod, precio, stock 
+SELECT 
+    id_producto, 
+    nombre_prod, 
+    precio, 
+    stock 
 FROM productos 
 WHERE stock <= 35;
 
@@ -273,8 +310,16 @@ LEFT JOIN metodos_pago mp ON v.id_metodo_pago = mp.id_metodo_pago
 LEFT JOIN seguimiento s ON v.id_venta = s.id_venta;
 
 CREATE OR REPLACE VIEW vista_usuarios_publico AS
-SELECT id_usuario, nombre, correo, rol, fecha_registro 
+SELECT 
+    id_usuario, 
+    nombre, 
+    correo, 
+    rol, 
+    fecha_registro 
 FROM usuarios;
 
+-- -----------------------------------------------------------------------------
+-- 6. RESTAURAR COMPROBACIÓN DE CLAVES FORÁNEAS
+-- -----------------------------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 1;
 COMMIT;
