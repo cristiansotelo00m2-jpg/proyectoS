@@ -1,4 +1,10 @@
 import os
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,7 +16,7 @@ db_config = {
     'host': os.environ.get('DB_HOST', 'mysql-2484a5be-cristiansotelo-6b14.f.aivencloud.com'),        
     'user': os.environ.get('DB_USER', 'avnadmin'), 
     'port': int(os.environ.get('DB_PORT', 23508)),         
-    'password': os.environ.get('DB_PASSWORD', 'TU_PASSWORD_AIVEN'),     
+    'password': os.environ.get('DB_PASSWORD', ''),     
     'database': os.environ.get('DB_NAME', 'main'),
     'ssl_ca': os.environ.get('DB_SSL_CA', 'ca.pem')
 }
