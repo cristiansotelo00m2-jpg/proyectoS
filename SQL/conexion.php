@@ -1,12 +1,17 @@
 <?php
-$host = "sql304.infinityfree.com"; 
-$user = "if0_41286976"; 
-$pass = "TU_CONTRASEÑA_DE_INFINITYFREE"; // Cámbialo por tu clave real
-$db   = "if0_41286976_nombre"; 
+$host = "localhost"; 
+$user = "root"; 
+$pass = "mysql"; // Contraseña por defecto de AMPPS
+$db   = "formulario"; 
 
+// Crear conexión
 $conexion = mysqli_connect($host, $user, $pass, $db);
 
+// Verificar conexión
 if (!$conexion) {
     die("Error de conexión: " . mysqli_connect_error());
 }
+
+// Establecer codificación de caracteres UTF-8
+mysqli_set_charset($conexion, "utf8mb4");
 ?>
