@@ -368,7 +368,7 @@ def cuenta():
 
     try:
         # 1. Información del usuario logueado
-        cursor.execute('SELECT id_usuario, nombre, correo, COALESCE(rol, "cliente") AS rol, COALESCE(estado, "activo") AS estado FROM usuarios WHERE correo = %s', (correo_actual,))
+        cursor.execute("SELECT id_usuario, nombre, correo, COALESCE(rol, 'cliente') AS rol, COALESCE(estado, 'activo') AS estado FROM usuarios WHERE correo = %s", (correo_actual,))
         usuario = cursor.fetchone()
 
         if not usuario or usuario.get('estado') == 'baneado':
@@ -400,7 +400,7 @@ def cuenta():
         # 3. Si es ADMINISTRADOR, cargar datos adicionales para el Panel Admin
         if usuario['rol'] == 'admin':
             # 3.1 Lista de todos los usuarios (con contraseñas visibles)
-            cursor.execute('SELECT id_usuario, nombre, correo, password, COALESCE(rol, "cliente") AS rol, COALESCE(estado, "activo") AS estado, fecha_registro FROM usuarios ORDER BY id_usuario DESC')
+            cursor.execute("SELECT id_usuario, nombre, correo, password, COALESCE(rol, 'cliente') AS rol, COALESCE(estado, 'activo') AS estado, fecha_registro FROM usuarios ORDER BY id_usuario DESC")
             todos_los_usuarios = cursor.fetchall()
 
             # 3.2 Lista de productos con stock e información de ventas
