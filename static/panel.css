@@ -1,0 +1,64 @@
+.admin {
+    height: 100px;
+    width: 100px;
+}
+/* Quita los márgenes por defecto del navegador */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 1. EL TRUCO PARA DIVIDIR LA PANTALLA */
+.contenedor-principal {
+    display: flex; /* Esto pone a los hijos (aside y main) uno al lado del otro */
+    min-height: 100vh; /* Hace que el panel ocupe toda la altura de la ventana */
+    font-family: Arial, sans-serif;
+}
+
+/* 2. ESTILOS DE LA BARRA IZQUIERDA */
+.barra-lateral {
+    width: 250px; /* Ancho fijo para tu menú */
+    background-color: #f4f4f4; /* Un gris clarito de fondo */
+    padding: 20px;
+    border-right: 2px solid #ddd; /* Una línea que divide las secciones */
+}
+
+/* Estilos extra para que el menú se vea mejor */
+.barra-lateral input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 20px;
+}
+
+.barra-lateral nav a {
+    display: block; /* Esto hace que los enlaces se apilen hacia abajo sin usar <br> */
+    padding: 10px 0;
+    text-decoration: none;
+    color: #333;
+}
+
+.barra-lateral nav a:hover {
+    color: blue; /* Cambia de color cuando pasas el mouse */
+}
+
+/* 3. ESTILOS DE LA PARTE DERECHA */
+.contenido-derecha {
+    flex: 1; /* Esto le dice al main: "ocupa todo el espacio que sobra a la derecha" */
+    padding: 40px;
+    background-color: #ffffff;
+}
+
+/* Estilos para las tarjetas de prueba que te puse en el HTML */
+.tarjetas-ejemplo {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.tarjeta {
+    background-color: #e0e0e0;
+    padding: 30px;
+    border-radius: 8px;
+    flex: 1;
+}

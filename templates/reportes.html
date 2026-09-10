@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes - EcoGreen</title>
+    <link rel="stylesheet" href="reportes.css">
+</head>
+<body>
+    <div class="contenedor-principal">
+        <aside class="barra-lateral">
+            <input type="text" placeholder="Buscador"/>
+            <header>
+                <div class="foto">
+                    <img src="imagenes/Admin.jpg" alt="admin" class="admin" width="80">
+                </div>
+                <h2>Panel Administrador</h2>
+            </header>
+            <nav>
+                <a href="usuarios.html">Usuarios</a>
+                <a href="productos.html">Productos</a>
+                <a href="reportes.html" class="activo">Reportes</a>
+                <a href="#">Configuración</a>
+                <a href="index.html">Inicio</a>
+            </nav>
+        </aside>
+
+        <main class="contenido-derecha">
+            <h1>Reportes de Impacto y Ventas</h1>
+            <p>Monitorea el crecimiento de la tienda y el plástico ahorrado al planeta.</p>
+
+            <div class="tarjetas-reporte">
+                <div class="tarjeta-dato">
+                    <h3>Ventas Totales</h3>
+                    <p class="valor">$4.250.000</p>
+                    <span class="tendencia positiva">↑ 12% este mes</span>
+                </div>
+                <div class="tarjeta-dato eco">
+                    <h3>Plástico Ahorrado</h3>
+                    <p class="valor">85 kg</p>
+                    <span class="tendencia">🍃 Meta: 100 kg</span>
+                </div>
+                <div class="tarjeta-dato">
+                    <h3>Pedidos Enviados</h3>
+                    <p class="valor">128</p>
+                    <span class="tendencia">📦 15 pendientes</span>
+                </div>
+            </div>
+
+            <div class="seccion-grafica">
+                <h2>Actividad Semanal</h2>
+                <div class="contenedor-barras">
+                    <div class="barra-grupo"><div class="barra" style="height: 60%;"></div><span>Lun</span></div>
+                    <div class="barra-grupo"><div class="barra" style="height: 40%;"></div><span>Mar</span></div>
+                    <div class="barra-grupo"><div class="barra" style="height: 85%;"></div><span>Mie</span></div>
+                    <div class="barra-grupo"><div class="barra" style="height: 50%;"></div><span>Jue</span></div>
+                    <div class="barra-grupo"><div class="barra" style="height: 75%;"></div><span>Vie</span></div>
+                    <div class="barra-grupo"><div class="barra" style="height: 95%;"></div><span>Sab</span></div>
+                    <div class="barra-grupo"><div class="barra" style="height: 30%;"></div><span>Dom</span></div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
